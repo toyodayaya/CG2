@@ -326,11 +326,34 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 
 	// これから書き込むバックバッファのインデックスを取得
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
+	// TransitionBarrierの設定
+	D3D12_RESOURCE_BARRIER barrier{};
+	// 今回のバリアはTransition
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	// Noneにしておく
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	// バリアを張る対象のリソース(現在のバックバッファに対して行う)
+	barrier.Transition.pResource = swapChainResources[backBufferIndex];
+	// 遷移前(現在)のResourceState
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	// 遷移後のResourceState
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	// TransitionBarrierを張る
+	commandList->ResourceBarrier(1, &barrier);
+
 	// 描画先のRTVを設定する
 	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
 	// 指定した色で画面全体をクリアする
 	float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };
 	commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
+
+	// 画面に映す状態に遷移
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+	// TransitionBarrierを張る
+	commandList->ResourceBarrier(1, &barrier);
+
 	// コマンドリストの内容を確定させる
 	hr = commandList->Close();
 	assert(SUCCEEDED(hr));
@@ -340,13 +363,39 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	commandQueue->ExecuteCommandLists(1, commandLists);
 	// GPUとOSに画面の交換を行うよう通知する
 	swapChain->Present(1, 0);
+
+	// 初期値0でFenceを作る
+	ID3D12Fence* fence = nullptr;
+	uint64_t fenceValue = 0;
+	hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+	assert(SUCCEEDED(hr));
+
+	// Fenceのsignalを待つためのイベントを作成する
+	HANDLE fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	assert(fenceEvent != nullptr);
+
+	// Fenceの値を更新する
+	fenceValue++;
+	//GPUがここまで辿り着いた時に、Fecceの値を指定した値に代入するようにSignalを送る
+	commandQueue->Signal(fence, fenceValue);
+
+	// Fenceの値が指定したSignal値に到達しているか確認する
+	if (fence->GetCompletedValue() < fenceValue)
+	{
+		// 指定したSignal値にたどり着くまで待つようにイベントを設定する
+		fence->SetEventOnCompletion(fenceValue, fenceEvent);
+		// イベントが発生するまで待つ
+		WaitForSingleObject(fenceEvent, INFINITE);
+	}
+
+
 	// 次のフレーム用のコマンドリストを準備
 	hr = commandAllocator->Reset();
 	assert(SUCCEEDED(hr));
 	hr = commandList->Reset(commandAllocator, nullptr);
 	assert(SUCCEEDED(hr));
 
-
+	
 	// メインループ
 	MSG msg{};
 	// ウインドウの×ボタンが押されるまでループ
