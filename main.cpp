@@ -10,6 +10,9 @@
 #include <cassert>
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
+#include <dbghelp.h>
+#pragma comment(lib, "Dbghelp.lib")
+#include <strsafe.h>
 #pragma warning(pop)
 
 
@@ -66,10 +69,37 @@ std::string ConvertString(const std::wstring& str) {
 	return result;
 }
 
+// CrashHandlerの登録
+static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception)
+{
+	// 時刻を取得し、時刻を名前に入れてファイルを出力し、Dumpsディレクトリ以下に出力
+	SYSTEMTIME time;
+	GetLocalTime(&time);
+	wchar_t filePath[MAX_PATH] = { 0 };
+	CreateDirectory(L"./Dumps", nullptr);
+	StringCchPrintfW(filePath, MAX_PATH, L"./Dumps/%04d-%02d%02d-%02d%02d.dmp", time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute);
+	HANDLE dumpfileHandle = CreateFile(filePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_ALWAYS, 0, 0);
+	// processIdとクラッシュの発生したThreadIdを取得
+	DWORD processId = GetCurrentProcessId();
+	DWORD threadId = GetCurrentThreadId();
+	// 設定情報を入力
+	MINIDUMP_EXCEPTION_INFORMATION minidumpInformation{ 0 };
+	minidumpInformation.ThreadId = threadId;
+	minidumpInformation.ExceptionPointers = exception;
+	minidumpInformation.ClientPointers = TRUE;
+	// Dumpを出力
+	MiniDumpWriteDump(GetCurrentProcess(), processId, dumpfileHandle, MiniDumpNormal, &minidumpInformation, nullptr, nullptr);
+	// 他に関連づけられているSEH例外ハンドラがあれば実行
+	return EXCEPTION_EXECUTE_HANDLER;
+}
+
 
 // Windowsアプリでのエントリーポイント
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 {
+	// 誰も捕捉しなかった場合に捕捉する関数を登録
+	SetUnhandledExceptionFilter(ExportDump);
+
 	WNDCLASS wc{};
 	// ウインドウプロシージャ
 	wc.lpfnWndProc = WindowProc;
@@ -191,6 +221,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 		else
 		{
 			// ゲームの処理
+			
 		}
 	}
 
