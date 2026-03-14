@@ -40,6 +40,8 @@ wndproc
 winmain
 debug
 msg
+wparam
+lparam
 
 // DirectX 12 & DXGI
 d3d
