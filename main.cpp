@@ -1015,27 +1015,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	// 分割数
 	const uint32_t kSubdivision = 16;
 
-	// indexResourceを生成する
-	// Index用の頂点リソースを作る
-	ID3D12Resource* indexResource = CreateBufferResources(device, sizeof(uint32_t) * 6);
-	// 頂点バッファビューを作成する
-	D3D12_INDEX_BUFFER_VIEW indexBufferView{};
-	// リソースの先頭のアドレスから使う
-	indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
-	// 使用するリソースのサイズ
-	indexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
-	// 1頂点辺りのサイズ
-	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-	// インデックスリソースにデータを書き込む
-	uint32_t* indexData = nullptr;
-	indexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
-	indexData[0] = 0;
-	indexData[1] = 1;
-	indexData[2] = 2;
-	indexData[3] = 1;
-	indexData[4] = 3;
-	indexData[5] = 2;
-
+	
 	// VertexResourceを生成する
 	// 頂点リソースを作る
 	ID3D12Resource* vertexResource = CreateBufferResources(device, sizeof(VertexData) * kSubdivision * kSubdivision * 6);
