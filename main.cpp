@@ -22,6 +22,8 @@
 #include <vector>
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <fstream>
+#include <sstream>
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
@@ -89,6 +91,11 @@ struct DirectionalLight
 	Vector4 color;
 	Vector3 direction;
 	float intensity;
+};
+
+struct ModelData
+{
+	std::vector<VertexData> vertices;
 };
 
 // ウインドウプロシージャ
@@ -424,6 +431,78 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	handleGPU.ptr += (descriptorSize * index);
 	return handleGPU;
+}
+
+// Objファイルを読み込む関数
+ModelData LoadObjFile(const std::string& directoryPath, const std::string& fileName)
+{
+	// 必要な変数を宣言する
+	ModelData modelData; // 構築するModelData
+	std::vector<Vector4> positions; // 位置
+	std::vector<Vector3> normals; // 法線
+	std::vector<Vector2> texcoords; // テクスチャ座標
+	std::string line; // ファイルから読んだ1行を格納する
+
+	// ファイルを開く
+	std::ifstream file(directoryPath + "/" + fileName);
+	assert(file.is_open()); // 開けなかったら止める
+
+	// ファイルを読み込みModelDataを構築
+	while (std::getline(file, line))
+	{
+		std::string identifier;
+		std::istringstream s(line);
+		s >> identifier; // 先頭の識別子を読む
+
+		// identifierに応じた処理
+		// 頂点情報を読む
+		if (identifier == "v")
+		{
+			Vector4 position;
+			s >> position.x >> position.y >> position.z;
+			position.w = 1.0f;
+			positions.push_back(position);
+		}
+		else if (identifier == "vt")
+		{
+			Vector2 texcoord;
+			s >> texcoord.x >> texcoord.y;
+			texcoords.push_back(texcoord);
+		}
+		else if (identifier == "vn")
+		{
+			Vector3 normal;
+			s >> normal.x >> normal.y >> normal.z;
+			normals.push_back(normal);
+		}
+		else if (identifier == "f")
+		{
+			// 三角形を作る
+			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex)
+			{
+				std::string vertexDefinition;
+				s >> vertexDefinition;
+				// 頂点の要素へのIndexを取得
+				std::istringstream v(vertexDefinition);
+				uint32_t elementIndices[3];
+				for (int32_t element = 0; element < 3; ++element)
+				{
+					std::string index;
+					std::getline(v, index, '/'); // 区切りでインデックスを読んでいく
+					elementIndices[element] = std::stoi(index);
+				}
+				// 要素のインデックスから実際の要素の値を取得して頂点を構築する
+				Vector4 position = positions[elementIndices[0] - 1];
+				Vector2 texcoord = texcoords[elementIndices[1] - 1];
+				Vector3 normal = normals[elementIndices[2] - 1];
+				VertexData vertex = { position,texcoord,normal };
+				modelData.vertices.push_back(vertex);
+			}
+		}
+	}
+
+	// ModelDataを返す
+	return modelData;
 }
 
 
@@ -1042,115 +1121,31 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	vertexDataSprite[3].normal = { 0.0f,0.0f,-1.0f };
 	
 	// 球体の頂点計算
-	// 分割数
-	const uint32_t kSubdivision = 16;
-
+	
+	// モデル読み込み
+	ModelData modelData = LoadObjFile("resources", "plane.obj");
 	
 	// VertexResourceを生成する
 	// 頂点リソースを作る
-	ID3D12Resource* vertexResource = CreateBufferResources(device, sizeof(VertexData) * kSubdivision * kSubdivision * 6);
+	ID3D12Resource* vertexResource = CreateBufferResources(device, sizeof(VertexData) * modelData.vertices.size());
 
 	// 頂点バッファビューを作成する
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	// リソースの先頭のアドレスから使う
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
 	// 使用するリソースのサイズは頂点3つ分のサイズ
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * kSubdivision * kSubdivision * 6;
+	vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
 	// 1頂点あたりのサイズ
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
 	// 頂点リソースにデータを書き込む
 	VertexData* vertexData = nullptr;
 	// 書き込むためのアドレスを取得
-	vertexResource->Map(0, nullptr,
-		reinterpret_cast<void**>(&vertexData));
+	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
+	// 頂点データにリソースをコピー
+	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData)* modelData.vertices.size());
 
-	// 経度分割1つ分の角度
-	const float kLonEvery = (2.0f * float(M_PI)) / float(kSubdivision);
-	// 緯度分割1つ分の角度
-	const float kLatEvery = float(M_PI) / float(kSubdivision);
-	// 経度の方向に分割
-	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex)
-	{
-		// 緯度の方向に分割しながら線を描く
-		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex)
-		{
-			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
-			float lon = lonIndex * kLonEvery;
-			float lon1 = (lonIndex + 1) * kLonEvery;
-			float lat = float(-M_PI) / 2.0f + kLatEvery * float(latIndex);
-			float lat1 = lat + kLatEvery;
-			float v0 = 1.0f - float(latIndex) / float(kSubdivision);
-			float v1 = 1.0f - float(latIndex + 1) / float(kSubdivision);
-			float u0 = float(lonIndex) / float(kSubdivision);
-			float u1 = float(lonIndex + 1) / float(kSubdivision);
-
-			// 頂点にデータを入力する
-			// 1つ目
-			vertexData[start].position.x = cos(lat) * cos(lon);
-			vertexData[start].position.y = sin(lat);
-			vertexData[start].position.z = cos(lat) * sin(lon);
-			vertexData[start].position.w = 1.0f;
-			vertexData[start].texcoord.x = u0;
-			vertexData[start].texcoord.y = v0;
-			vertexData[start].normal.x = vertexData[start].position.x;
-			vertexData[start].normal.y = vertexData[start].position.y;
-			vertexData[start].normal.z = vertexData[start].position.z;
-			// 2つ目
-			vertexData[start + 1].position.x = cos(lat1) * cos(lon);
-			vertexData[start + 1].position.y = sin(lat1);
-			vertexData[start + 1].position.z = cos(lat1) * sin(lon);
-			vertexData[start + 1].position.w = 1.0f;
-			vertexData[start + 1].texcoord.x = u0;
-			vertexData[start + 1].texcoord.y = v1;
-			vertexData[start + 1].normal.x = vertexData[start].position.x;
-			vertexData[start + 1].normal.y = vertexData[start].position.y;
-			vertexData[start + 1].normal.z = vertexData[start].position.z;
-			// 3つ目
-			vertexData[start + 2].position.x = cos(lat) * cos(lon1);
-			vertexData[start + 2].position.y = sin(lat);
-			vertexData[start + 2].position.z = cos(lat) * sin(lon1);
-			vertexData[start + 2].position.w = 1.0f;
-			vertexData[start + 2].texcoord.x = u1;
-			vertexData[start + 2].texcoord.y = v0;
-			vertexData[start + 2].normal.x = vertexData[start].position.x;
-			vertexData[start + 2].normal.y = vertexData[start].position.y;
-			vertexData[start + 2].normal.z = vertexData[start].position.z;
-			// 4つ目
-			vertexData[start + 3].position.x = cos(lat) * cos(lon1);
-			vertexData[start + 3].position.y = sin(lat);
-			vertexData[start + 3].position.z = cos(lat) * sin(lon1);
-			vertexData[start + 3].position.w = 1.0f;
-			vertexData[start + 3].texcoord.x = u1;
-			vertexData[start + 3].texcoord.y = v0;
-			vertexData[start + 3].normal.x = vertexData[start].position.x;
-			vertexData[start + 3].normal.y = vertexData[start].position.y;
-			vertexData[start + 3].normal.z = vertexData[start].position.z;
-			// 5つ目
-			vertexData[start + 4].position.x = cos(lat1) * cos(lon);
-			vertexData[start + 4].position.y = sin(lat1);
-			vertexData[start + 4].position.z = cos(lat1) * sin(lon);
-			vertexData[start + 4].position.w = 1.0f;
-			vertexData[start + 4].texcoord.x = u0;
-			vertexData[start + 4].texcoord.y = v1;
-			vertexData[start + 4].normal.x = vertexData[start].position.x;
-			vertexData[start + 4].normal.y = vertexData[start].position.y;
-			vertexData[start + 4].normal.z = vertexData[start].position.z;
-			// 6つ目
-			vertexData[start + 5].position.x = cos(lat1) * cos(lon1);
-			vertexData[start + 5].position.y = sin(lat1);
-			vertexData[start + 5].position.z = cos(lat1) * sin(lon1);
-			vertexData[start + 5].position.w = 1.0f;
-			vertexData[start + 5].texcoord.x = u1;
-			vertexData[start + 5].texcoord.y = v1;
-			vertexData[start + 5].normal.x = vertexData[start].position.x;
-			vertexData[start + 5].normal.y = vertexData[start].position.y;
-			vertexData[start + 5].normal.z = vertexData[start].position.z;
-		}
-	}
-
-
-
+	
 	// マテリアル用のリソースを作る
 	ID3D12Resource* materialResource = CreateBufferResources(device, sizeof(Material));
 	// マテリアルにデータを書き込む
@@ -1471,7 +1466,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 			// 平行光源用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 			// 描画
-			commandList->DrawInstanced(kSubdivision * kSubdivision * 6, 1, 0, 0);
+			commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 
 			// Spriteの描画処理
 			// マテリアルのCBufferの場所を設定
@@ -1485,7 +1480,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 			// SpriteCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 			// 描画
-			commandList->DrawIndexedInstanced(6, 1, 0, 0,0);
+			//commandList->DrawIndexedInstanced(6, 1, 0, 0,0);
 
 #ifdef USE_IMGUI
 
