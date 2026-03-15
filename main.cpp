@@ -93,9 +93,16 @@ struct DirectionalLight
 	float intensity;
 };
 
+struct MaterialData
+{
+	std::string textureFilePath;
+};
+
+
 struct ModelData
 {
 	std::vector<VertexData> vertices;
+	MaterialData material;
 };
 
 // ウインドウプロシージャ
@@ -433,6 +440,40 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 	return handleGPU;
 }
 
+// mtlファイルを読む関数
+MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
+{
+	// 必要な変数を宣言する
+	MaterialData materialData; // 構築するMaterialData
+	std::string line; // ファイルから読んだ1行を格納
+
+	// ファイルを開く
+	std::ifstream file(directoryPath + "/" + filename);
+	assert(file.is_open()); // 開けなかったら止める
+
+	// 実際にファイルを読み込みMaterialDataを構築する
+	while (std::getline(file, line))
+	{
+		std::string identifier;
+		std::istringstream s(line);
+		s >> identifier;
+
+		// identifierに応じた処理
+		if (identifier == "map_Kd")
+		{
+			std::string textureFilename;
+			s >> textureFilename;
+			// 連結してファイルパスにする
+			materialData.textureFilePath = directoryPath + "/" + textureFilename;
+		}
+	}
+
+	// MaterialDataを返す
+	return materialData;
+}
+
+
+
 // Objファイルを読み込む関数
 ModelData LoadObjFile(const std::string& directoryPath, const std::string& fileName)
 {
@@ -477,6 +518,7 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& fileN
 		}
 		else if (identifier == "f")
 		{
+			VertexData triangle[3];
 			// 三角形を作る
 			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex)
 			{
@@ -495,16 +537,30 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& fileN
 				Vector4 position = positions[elementIndices[0] - 1];
 				Vector2 texcoord = texcoords[elementIndices[1] - 1];
 				Vector3 normal = normals[elementIndices[2] - 1];
-				VertexData vertex = { position,texcoord,normal };
+				position.x *= -1.0f;
+				texcoord.y = 1.0f - texcoord.y;
+				normal.x *= -1.0f;
+				VertexData vertex = { position, texcoord, normal };
 				modelData.vertices.push_back(vertex);
+				triangle[faceVertex] = { position,texcoord,normal };
 			}
+			modelData.vertices.push_back(triangle[2]);
+			modelData.vertices.push_back(triangle[1]);
+			modelData.vertices.push_back(triangle[0]);
+		}
+		else if (identifier == "mtllib")
+		{
+			// materialTemplateLibraryファイルの名前を取得する
+			std::string materialFileName;
+			s >> materialFileName;
+			// ディレクトリ名とファイル名を渡す
+			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFileName);
 		}
 	}
 
 	// ModelDataを返す
 	return modelData;
 }
-
 
 // 単位行列の作成
 Matrix4x4 MakeIdentity4x4()
@@ -968,6 +1024,31 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
 	assert(SUCCEEDED(hr));
 
+	// モデル読み込み
+	ModelData modelData = LoadObjFile("resources", "axis.obj");
+
+	// VertexResourceを生成する
+	// 頂点リソースを作る
+	ID3D12Resource* vertexResource = CreateBufferResources(device, sizeof(VertexData) * modelData.vertices.size());
+
+	// 頂点バッファビューを作成する
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+	// リソースの先頭のアドレスから使う
+	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
+	// 使用するリソースのサイズは頂点3つ分のサイズ
+	vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
+	// 1頂点あたりのサイズ
+	vertexBufferView.StrideInBytes = sizeof(VertexData);
+
+	// 頂点リソースにデータを書き込む
+	VertexData* vertexData = nullptr;
+	// 書き込むためのアドレスを取得
+	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
+	// 頂点データにリソースをコピー
+	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData)* modelData.vertices.size());
+
+
+
 	// Textureを読んで転送する
 	DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
 	const DirectX::TexMetadata& metaData = mipImages.GetMetadata();
@@ -975,7 +1056,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	ID3D12Resource* intermediateResource = UploadTextureData(textureResource, mipImages, device, commandList);
 
 	// 2枚目のTextureを読んで転送する
-	DirectX::ScratchImage mipImages2 = LoadTexture("resources/monsterBall.png");
+	DirectX::ScratchImage mipImages2 = LoadTexture(modelData.material.textureFilePath);
 	const DirectX::TexMetadata& metaData2 = mipImages2.GetMetadata();
 	ID3D12Resource* textureResource2 = CreateTextureResource(device, metaData2);
 	ID3D12Resource* intermediateResource2 = UploadTextureData(textureResource2, mipImages2, device, commandList);
@@ -1120,31 +1201,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	vertexDataSprite[3].texcoord = { 1.0f,0.0f };
 	vertexDataSprite[3].normal = { 0.0f,0.0f,-1.0f };
 	
-	// 球体の頂点計算
 	
-	// モデル読み込み
-	ModelData modelData = LoadObjFile("resources", "plane.obj");
-	
-	// VertexResourceを生成する
-	// 頂点リソースを作る
-	ID3D12Resource* vertexResource = CreateBufferResources(device, sizeof(VertexData) * modelData.vertices.size());
-
-	// 頂点バッファビューを作成する
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	// リソースの先頭のアドレスから使う
-	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
-	// 使用するリソースのサイズは頂点3つ分のサイズ
-	vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
-	// 1頂点あたりのサイズ
-	vertexBufferView.StrideInBytes = sizeof(VertexData);
-
-	// 頂点リソースにデータを書き込む
-	VertexData* vertexData = nullptr;
-	// 書き込むためのアドレスを取得
-	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-	// 頂点データにリソースをコピー
-	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData)* modelData.vertices.size());
-
 	
 	// マテリアル用のリソースを作る
 	ID3D12Resource* materialResource = CreateBufferResources(device, sizeof(Material));
@@ -1373,7 +1430,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 
 			// ゲームの処理
 			// 更新処理
-			transform.rotate.y += 0.01f;
+			//transform.rotate.y += 0.01f;
 			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
@@ -1404,6 +1461,19 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 			ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
 			ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
 			ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
+
+			ImGui::Separator();
+			ImGui::Text("Camera");
+			ImGui::DragFloat3("Camera Pos", &cameraTransform.translate.x, 0.1f);
+			ImGui::SliderAngle("Camera Rot X", &cameraTransform.rotate.x);
+			ImGui::SliderAngle("Camera Rot Y", &cameraTransform.rotate.y);
+			ImGui::SliderAngle("Camera Rot Z", &cameraTransform.rotate.z);
+
+			ImGui::Separator();
+			ImGui::Text("Model Rotation");
+			ImGui::SliderAngle("Rot X", &transform.rotate.x, -180.0f, 180.0f);
+			ImGui::SliderAngle("Rot Y", &transform.rotate.y, -180.0f, 180.0f);
+			ImGui::SliderAngle("Rot Z", &transform.rotate.z, -180.0f, 180.0f);
 
 			// ImGuiの内部コマンドを生成する
 			ImGui::Render();
