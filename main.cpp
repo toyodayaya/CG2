@@ -25,6 +25,8 @@
 #include <fstream>
 #include <sstream>
 #include <wrl.h>
+#include <xaudio2.h>
+#pragma comment(lib,"xaudio2.lib")
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
@@ -104,6 +106,37 @@ struct ModelData
 {
 	std::vector<VertexData> vertices;
 	MaterialData material;
+};
+
+// チャンクヘッダ
+struct ChunkHeader
+{
+	char id[4];
+	int32_t size;
+};
+
+// RIFFヘッダチャンク
+struct RiffHeader
+{
+	ChunkHeader chunk;
+	char type[4];
+};
+
+// FMTチャンク
+struct FormatChunk
+{
+	ChunkHeader chunk;
+	WAVEFORMATEX fmt;
+};
+
+struct SoundData
+{
+	// 波形フォーマット
+	WAVEFORMATEX wfex;
+	// バッファの先頭アドレス
+	BYTE* pBuffer;
+	// バッファのサイズ
+	unsigned int bufferSize;
 };
 
 // リークチェック
@@ -579,6 +612,111 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& fileN
 	return modelData;
 }
 
+// 音声データ読み込み関数
+SoundData SoundLoadWave(const char* filename)
+{
+	//HRESULT result;
+
+	// ファイルを開く
+	std::ifstream file;
+	file.open(filename, std::ios_base::binary);
+	assert(file.is_open());
+
+	// wavデータ読み込み
+	// RIFFヘッダー読み込み
+	RiffHeader riff;
+	file.read((char*)&riff, sizeof(riff));
+
+	// バイナリがRIFFと一致するかチェック
+	if (strncmp(riff.chunk.id, "RIFF", 4) != 0)
+	{
+		assert(0);
+	}
+
+	// WAVEかどうかチェック
+	if (strncmp(riff.type, "WAVE", 4) != 0)
+	{
+		assert(0);
+	}
+
+	// Formatチャンクの読み込み
+	FormatChunk format = {};
+	// チャンクヘッダーの確認
+	file.read((char*)&format, sizeof(ChunkHeader));
+	if (strncmp(format.chunk.id, "fmt ", 4) != 0)
+	{
+		assert(0);
+	}
+
+	// チャンク本体の読み込み
+	assert(format.chunk.size <= sizeof(format.fmt));
+	file.read((char*)&format.fmt, format.chunk.size);
+
+	// Dataチャンクの読み込み
+	ChunkHeader data;
+	file.read((char*)&data, sizeof(data));
+	// JUNKチャンクを検出したら
+	if (strncmp(data.id, "JUNK", 4) == 0)
+	{
+		// 読み取り位置をJUNKチャンクの最後まで飛ばす
+		file.seekg(data.size, std::ios_base::cur);
+		// 再読み込み
+		file.read((char*)&data, sizeof(data));
+	}
+
+	if (strncmp(data.id, "data", 4) != 0)
+	{
+		assert(0);
+	}
+
+	// Dataチャンクのデータ部の読み込み
+	char* pBuffer = new char[data.size];
+	file.read(pBuffer, data.size);
+	
+	// ファイルを閉じる
+	file.close();
+
+	// 読み込んだ音声データを返す
+	// 返すための音声データ
+	SoundData soundData = {};
+	soundData.wfex = format.fmt;
+	soundData.pBuffer = reinterpret_cast<BYTE*>(pBuffer);
+	soundData.bufferSize = data.size;
+
+	return soundData;
+}
+
+// 音声データの解放関数
+void SoundUnload(SoundData* soundData)
+{
+	// バッファのメモリを解放
+	delete[] soundData->pBuffer;
+	soundData->pBuffer = 0;
+	soundData->bufferSize = 0;
+	soundData->wfex = {};
+}
+
+// 音声データの再生関数
+void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData)
+{
+	HRESULT result;
+
+	// 波形フォーマットを基にSoundVoiceを生成
+	IXAudio2SourceVoice* pSourceVoice = nullptr;
+	result = xAudio2->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
+	assert(SUCCEEDED(result));
+
+	// 再生する波形データの設定
+	XAUDIO2_BUFFER buf{};
+	buf.pAudioData = soundData.pBuffer;
+	buf.AudioBytes = soundData.bufferSize;
+	buf.Flags = XAUDIO2_END_OF_STREAM;
+
+	// 波形データの再生
+	result = pSourceVoice->SubmitSourceBuffer(&buf);
+	result = pSourceVoice->Start();
+}
+
 // 単位行列の作成
 Matrix4x4 MakeIdentity4x4()
 {
@@ -1045,6 +1183,19 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
 	assert(SUCCEEDED(hr));
 
+	//　音声データ用の変数宣言
+	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
+	IXAudio2MasteringVoice* masterVoice;
+
+	// xAudio2エンジンのインスタンスを生成
+	HRESULT result;
+	result = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
+	// マスターボイスを生成
+	result = xAudio2->CreateMasteringVoice(&masterVoice);
+
+	// 音声読み込み
+	SoundData soundData1 = SoundLoadWave("resources/Alarm01.wav");
+
 	// モデル読み込み
 	ModelData modelData = LoadObjFile("resources", "axis.obj");
 
@@ -1409,8 +1560,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	HANDLE fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	assert(fenceEvent != nullptr);
 
-
-
+	
 	// Transform変数を作る
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
@@ -1422,8 +1572,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 		{0.0f,0.0f,0.0f}
 	};
 
+	
 	// スプライト切り替えフラグ
 	bool useMonsterBall = true;
+
+	// 音声再生
+	SoundPlayWave(xAudio2.Get(), soundData1);
 
 	// メインループ
 	MSG msg{};
@@ -1634,6 +1788,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	// 解放処理
 	CloseHandle(fenceEvent);
 	CloseWindow(hwnd);
+
+	// xAudio2解放
+	xAudio2.Reset();
+	// 音声データ解放
+	SoundUnload(&soundData1);
 
 	// COMの終了処理
 	CoUninitialize();
