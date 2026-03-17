@@ -919,7 +919,6 @@ Matrix4x4 Inverse(const Matrix4x4& m)
 // Windowsアプリでのエントリーポイント
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) 
 {
-
 	// リークチェック用のインスタンスを生成
 	D3DResourceLeakChecker leakCheck;
 
