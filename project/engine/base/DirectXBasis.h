@@ -82,10 +82,12 @@ private:
 	Microsoft::WRL::ComPtr <ID3D12CommandQueue> commandQueue;
 	// スワップチェーン
 	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain;
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 	// スワップチェーンリソース
 	std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2> swapChainResources;
 	// RTVを二つ作るのでディスクリプタを二つ用意
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
 	// ディスクリプタサイズ
 	uint32_t descriptorSizeSRV;
 	uint32_t descriptorSizeRTV;

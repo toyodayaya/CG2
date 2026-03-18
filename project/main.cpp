@@ -13,12 +13,7 @@
 #include "externals/DirectXTex/DirectXTex.h"
 #include "externals/DirectXTex/d3dx12.h"
 #include <vector>
-#ifdef USE_IMGUI
-#include "externals/imgui/imgui.h"
-#include "externals/imgui/imgui_impl_dx12.h"
-#include "externals/imgui/imgui_impl_win32.h"
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-#endif
+
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <fstream>
@@ -1224,9 +1219,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 
 #ifdef USE_IMGUI
 		// ImGuiに通知
-		ImGui_ImplDX12_NewFrame();
+		/*ImGui_ImplDX12_NewFrame();
 		ImGui_ImplWin32_NewFrame();
-		ImGui::NewFrame();
+		ImGui::NewFrame();*/
 #endif // USE_IMGUI
 
 
@@ -1267,29 +1262,29 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 
 #ifdef USE_IMGUI
 		// 開発用UIの処理
-		ImGui::ShowDemoWindow();
+		//ImGui::ShowDemoWindow();
 
-		ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+		//ImGui::Checkbox("useMonsterBall", &useMonsterBall);
 
-		ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-		ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-		ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
+		//ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+		//ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+		//ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
 
-		ImGui::Separator();
-		ImGui::Text("Camera");
-		ImGui::DragFloat3("Camera Pos", &cameraTransform.translate.x, 0.1f);
-		ImGui::SliderAngle("Camera Rot X", &cameraTransform.rotate.x);
-		ImGui::SliderAngle("Camera Rot Y", &cameraTransform.rotate.y);
-		ImGui::SliderAngle("Camera Rot Z", &cameraTransform.rotate.z);
+		//ImGui::Separator();
+		//ImGui::Text("Camera");
+		//ImGui::DragFloat3("Camera Pos", &cameraTransform.translate.x, 0.1f);
+		//ImGui::SliderAngle("Camera Rot X", &cameraTransform.rotate.x);
+		//ImGui::SliderAngle("Camera Rot Y", &cameraTransform.rotate.y);
+		//ImGui::SliderAngle("Camera Rot Z", &cameraTransform.rotate.z);
 
-		ImGui::Separator();
-		ImGui::Text("Model Rotation");
-		ImGui::SliderAngle("Rot X", &transform.rotate.x, -180.0f, 180.0f);
-		ImGui::SliderAngle("Rot Y", &transform.rotate.y, -180.0f, 180.0f);
-		ImGui::SliderAngle("Rot Z", &transform.rotate.z, -180.0f, 180.0f);
+		//ImGui::Separator();
+		//ImGui::Text("Model Rotation");
+		//ImGui::SliderAngle("Rot X", &transform.rotate.x, -180.0f, 180.0f);
+		//ImGui::SliderAngle("Rot Y", &transform.rotate.y, -180.0f, 180.0f);
+		//ImGui::SliderAngle("Rot Z", &transform.rotate.z, -180.0f, 180.0f);
 
-		// ImGuiの内部コマンドを生成する
-		ImGui::Render();
+		//// ImGuiの内部コマンドを生成する
+		//ImGui::Render();
 #endif // USE_IMGUI
 
 
@@ -1335,7 +1330,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 #ifdef USE_IMGUI
 
 			// ImGuiを描画
-		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
+		//ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
 
 #endif
 
@@ -1346,9 +1341,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 
 #ifdef USE_IMGUI
 	// ImGui終了処理
-	ImGui_ImplDX12_Shutdown();
+	/*ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
+	ImGui::DestroyContext();*/
 #endif
 
 

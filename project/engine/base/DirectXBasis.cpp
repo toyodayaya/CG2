@@ -7,6 +7,12 @@
 #include <format>
 #include <dxcapi.h>
 #pragma comment(lib, "dxcompiler.lib")
+#ifdef USE_IMGUI
+#include "externals/imgui/imgui.h"
+#include "externals/imgui/imgui_impl_dx12.h"
+#include "externals/imgui/imgui_impl_win32.h"
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+#endif
 
 void DirectXBasis::Initialize(WinAPIManager* winApiManager)
 {
@@ -192,7 +198,7 @@ void DirectXBasis::CommandInitialize()
 void DirectXBasis::SwapChainGenerate()
 {
 	// スワップチェーンを生成する
-	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
+	
 	swapChainDesc.Width = winApiManager_->kClientWidth; // ウインドウの幅
 	swapChainDesc.Height = winApiManager_->kClientHeight; // ウインドウの高さ
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // 色のフォーマット
@@ -210,8 +216,8 @@ void DirectXBasis::DepthStencilGenerate()
 {
 	// 生成するResourceの設定
 	D3D12_RESOURCE_DESC resourceDesc{};
-	resourceDesc.Width = 1; // Textureの幅
-	resourceDesc.Height = 1; // Textureの高さ
+	resourceDesc.Width = winApiManager_->kClientWidth; // Textureの幅
+	resourceDesc.Height = winApiManager_->kClientHeight; // Textureの高さ
 	resourceDesc.MipLevels = 1; // mipmapの数
 	resourceDesc.DepthOrArraySize = 1; // 奥行き
 	resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // 利用可能なフォーマット
@@ -229,14 +235,13 @@ void DirectXBasis::DepthStencilGenerate()
 	depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // Format(Resourceと合わせる)
 
 	// Resourceの生成
-	Microsoft::WRL::ComPtr <ID3D12Resource> resource = nullptr;
 	hr = device->CreateCommittedResource(
 		&heapProperties, // Heapの設定
 		D3D12_HEAP_FLAG_NONE, // Heapの特殊な設定(特になし)
 		&resourceDesc, // Resourceの設定
 		D3D12_RESOURCE_STATE_DEPTH_WRITE, // 深度値を書き込む状態に設定
 		&depthClearValue, // Clear最適値
-		IID_PPV_ARGS(&resource) // 作成するResourcesポインタへのポインタ
+		IID_PPV_ARGS(&depthStencilResource) // 作成するResourcesポインタへのポインタ
 	);
 
 	assert(SUCCEEDED(hr));
@@ -275,7 +280,6 @@ Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DirectXBasis::CreateDescriptorHeap(
 void DirectXBasis::RenderTargetViewInitialize()
 {
 	// スワップチェーンからリソースを引っ張ってくる
-	swapChainResources[2] = { nullptr };
 	hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResources[0]));
 	// リソースの取得が上手く行かなかったので起動できない
 	assert(SUCCEEDED(hr));
@@ -283,7 +287,6 @@ void DirectXBasis::RenderTargetViewInitialize()
 	assert(SUCCEEDED(hr));
 
 	// rtvの設定
-	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
 	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 出力結果をSRGBに変換して書き込む
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D; // 2Dテクスチャとして扱う
 	// ディスクリプタの先頭を取得する
@@ -293,7 +296,7 @@ void DirectXBasis::RenderTargetViewInitialize()
 	for (uint32_t i = 0; i < 2; ++i)
 	{
 		// 作成する
-		rtvHandles[i] = rtvStartHandle;
+		rtvHandles[i] = GetCPUDescriptorHandle(rtvDescriptorHeap, descriptorSizeRTV, i);
 		device->CreateRenderTargetView(swapChainResources[i].Get(), &rtvDesc, rtvHandles[i]);
 	}
 
@@ -375,7 +378,7 @@ void DirectXBasis::ImGuiInitialize()
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
-	ImGui_ImplWin32_Init(winAPIManager->GetHwnd());
+	ImGui_ImplWin32_Init(winApiManager_->GetHwnd());
 	ImGui_ImplDX12_Init(device.Get(),
 		swapChainDesc.BufferCount,
 		rtvDesc.Format,
@@ -411,12 +414,12 @@ void DirectXBasis::PreDraw()
 	// 描画先のRTVとDSVを設定する
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
-	// 指定した深度で画面全体をクリアする
-	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	// 指定した色で画面全体をクリアする
 	float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };
 	commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
-
+	// 指定した深度で画面全体をクリアする
+	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	
 	// 描画用のDescriptorHeapの設定
 	Microsoft::WRL::ComPtr <ID3D12DescriptorHeap> descriptorHeaps[] = { srvDescriptHeap };
 	commandList->SetDescriptorHeaps(1, descriptorHeaps->GetAddressOf());
