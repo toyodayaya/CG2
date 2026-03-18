@@ -29,28 +29,28 @@ on:
         - name: リポジトリをチェックアウト
           uses: actions/checkout@v4
 
-          -name: 不要なファイルとディレクトリを検索
-           run: |
-             # ディレクトリ検索を構築
-             DIR_CONDITIONS=()
-             for pattern in $UNWANTED_DIR_PATTERNS; do
-               DIR_CONDITIONS+=(-o -iname "$pattern")
-             done
-             unset DIR_CONDITIONS[0]
-             # ファイル条件を構築
-             NAME_CONDITIONS=()
-             for pattern in $UNWANTED_NAME_PATTERNS; do
-               NAME_CONDITIONS+=(-o -iname "$pattern")
-             done
-             unset NAME_CONDITIONS[0]
+        - name: 不要なファイルとディレクトリを検索
+          run: |
+            # ディレクトリ検索を構築
+            DIR_CONDITIONS=()
+            for pattern in $UNWANTED_DIR_PATTERNS; do
+              DIR_CONDITIONS+=(-o -iname "$pattern")
+            done
+            unset DIR_CONDITIONS[0]
+            # ファイル条件を構築
+            NAME_CONDITIONS=()
+            for pattern in $UNWANTED_NAME_PATTERNS; do
+              NAME_CONDITIONS+=(-o -iname "$pattern")
+            done
+            unset NAME_CONDITIONS[0]
 
-             # 1回のFind実行で全件を検索
-             # 1. .git を除外
-             # 2. 不要なディレクトリを検索し、見つけたらパスを出力してその中身を枝刈り
-             # 2. または不要なファイルを検索しパスを出力
-             UNWANTED_LIST=$(find . -path "./.git" -prune -o \
-               \( \( "${DIR_CONDITIONS[@]}" \) -a -type d -print -prune \) -o \
-               \( \( "${NAME_CONDITIONS[@]}" \) -a -type f -print \) \
+            # 1回のFind実行で全件を検索
+            # 1. .git を除外
+            # 2. 不要なディレクトリを検索し、見つけたらパスを出力してその中身を枝刈り
+            # 2. または不要なファイルを検索しパスを出力
+            UNWANTED_LIST=$(find . -path "./.git" -prune -o \
+             \( \( "${DIR_CONDITIONS[@]}" \) -a -type d -print -prune \) -o \
+             \( \( "${NAME_CONDITIONS[@]}" \) -a -type f -print \) \
             )
 
             # 検出結果があればエラーとして出力し失敗させる
