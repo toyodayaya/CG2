@@ -3,6 +3,7 @@
 #include <wrl.h>
 #define DIRECTINPUT_VERSION 0x0800 // DirectInputのバージョン指定
 #include <dinput.h>
+#include "WinAPIManager.h"
 
 // 入力クラス
 class Input
@@ -13,7 +14,7 @@ public:
 
 public:
 	// 初期化
-	void Initialize(HINSTANCE hInstance,HWND hwnd);
+	void Initialize(WinAPIManager* winApiManager);
 
 	// 更新
 	void Update();
@@ -33,4 +34,6 @@ private:
 	BYTE key[256] = {};
 	// 全キーの前回の入力状態を取得する
 	BYTE preKey[256] = {};
+	// WindowsAPI
+	WinAPIManager* winApiManager_ = nullptr;
 };

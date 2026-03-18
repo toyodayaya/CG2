@@ -4,11 +4,13 @@
 #pragma comment(lib,"dxguid.lib")
 #include <cassert>
 
-void Input::Initialize(HINSTANCE hInstance, HWND hwnd)
+void Input::Initialize(WinAPIManager* winApiManager)
 {
+	// 借りてきたWinAPIのインスタンスを記録
+	this->winApiManager_ = winApiManager;
 	
 	HRESULT inputResult = DirectInput8Create(
-		hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
+		winApiManager_->GetHInstance(), DIRECTINPUT_VERSION, IID_IDirectInput8,
 		(void**)&directInput, nullptr);
 	assert(SUCCEEDED(inputResult));
 	
@@ -19,7 +21,7 @@ void Input::Initialize(HINSTANCE hInstance, HWND hwnd)
 	assert(SUCCEEDED(inputResult));
 	// 排他制御レベルのセット
 	inputResult = keyboard->SetCooperativeLevel(
-		hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
+		winApiManager_->GetHwnd(), DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
 	assert(SUCCEEDED(inputResult));
 }
 
