@@ -27,10 +27,7 @@
 #include <wrl.h>
 #include <xaudio2.h>
 #pragma comment(lib,"xaudio2.lib")
-#define DIRECTINPUT_VERSION 0x0800 // DirectInputのバージョン指定
-#include <dinput.h>
-#pragma comment(lib,"dinput8.lib")
-#pragma comment(lib,"dxguid.lib")
+#include "Input.h"
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
@@ -1197,23 +1194,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	// 音声読み込み
 	SoundData soundData1 = SoundLoadWave("resources/Alarm01.wav");
 
-	// DirectInputの初期化
-	IDirectInput8* directInput = nullptr;
-	HRESULT inputResult = DirectInput8Create(
-		wc.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
-		(void**)&directInput, nullptr);
-	assert(SUCCEEDED(inputResult));
-	// キーボードデバイスの生成
-	IDirectInputDevice8* keyboard = nullptr;
-	inputResult = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
-	assert(SUCCEEDED(inputResult));
-	// 入力データ形式のセット
-	inputResult = keyboard->SetDataFormat(&c_dfDIKeyboard); // 標準形式
-	assert(SUCCEEDED(inputResult));
-	// 排他制御レベルのセット
-	inputResult = keyboard->SetCooperativeLevel(
-		hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
-	assert(SUCCEEDED(inputResult));
+	// 入力クラスのポインタ
+	Input* input = nullptr;
+	// 入力の初期化
+	input = new Input();
+	input->Initialize(wc.hInstance,hwnd);
 
 	// モデル読み込み
 	ModelData modelData = LoadObjFile("resources", "axis.obj");
@@ -1646,13 +1631,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 			uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
 			materialDataSprite->uvTransform = uvTransformMatrix;
 
-			// キーボード情報の取得開始
-			keyboard->Acquire();
-			// 全キーの入力状態を取得する
-			BYTE key[256] = {};
-			keyboard->GetDeviceState(sizeof(key), key);
+			// 入力の更新処理
+			input->Update();
+
 			// 数字の0キーが押されていたら
-			if (key[DIK_0])
+			if (input->TriggerKey(DIK_0))
 			{
 				OutputDebugStringA("Hit 0\n");
 			}
@@ -1818,6 +1801,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	// 解放処理
 	CloseHandle(fenceEvent);
 	CloseWindow(hwnd);
+	delete input;
 
 	// xAudio2解放
 	xAudio2.Reset();
