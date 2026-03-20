@@ -1,4 +1,5 @@
 ﻿#include "WinAPIManager.h"
+#pragma comment(lib,"winmm.lib")
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
@@ -53,6 +54,9 @@ void WinAPIManager::Initialize()
 
 	// 出力ウインドウへの文字出力
 	OutputDebugStringA("Hello,DirectX!\n");
+
+	// システムタイマーの分解能を上げる
+	timeBeginPeriod(1);
 }
 
 void WinAPIManager::Finalize()

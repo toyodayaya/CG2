@@ -13,6 +13,8 @@
 #include "externals/imgui/imgui_impl_win32.h"
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 #endif
+#include <externals/DirectXTex/d3dx12.h>
+#include <thread>
 
 void DirectXBasis::Initialize(WinAPIManager* winApiManager)
 {
@@ -20,6 +22,9 @@ void DirectXBasis::Initialize(WinAPIManager* winApiManager)
 	assert(winApiManager);
 	// メンバ変数に記録
 	this->winApiManager_ = winApiManager;
+
+	// FPS固定初期化
+	InitializeFixFPS();
 
 	// デバイスの生成
 	DeviceInitialize();
@@ -357,15 +362,12 @@ void DirectXBasis::ScissorRectInitialize()
 void DirectXBasis::DXCCompilerGenerate()
 {
 	// dxcCompilerを初期化
-	IDxcUtils* dxcUtils = nullptr;
-	IDxcCompiler3* dxcCompiler = nullptr;
 	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
 	assert(SUCCEEDED(hr));
 	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
 	assert(SUCCEEDED(hr));
 
 	// includeに対応するための設定
-	IDxcIncludeHandler* includeHandler = nullptr;
 	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
 	assert(SUCCEEDED(hr));
 
@@ -390,6 +392,164 @@ void DirectXBasis::ImGuiInitialize()
 	io.Fonts->Build();
 
 #endif // 
+}
+
+Microsoft::WRL::ComPtr<IDxcBlob> DirectXBasis::CompileShader(const std::wstring& filePath, const wchar_t* profile)
+{
+	// hlslファイルを読み込む
+
+	// シェーダーをコンパイルする旨をログに出す
+	Logger::Log(StringUtility::ConvertString(std::format(L"Begin CompileShader, path:{}, profile:{}\n", filePath, profile)));
+	// hlslファイルを読む
+	IDxcBlobEncoding* shaderSource = nullptr;
+	HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
+	// 読めなかったら止める
+	assert(SUCCEEDED(hr));
+	// 読み込んだファイルの内容を設定する
+	DxcBuffer shaderSourceBuffer;
+	shaderSourceBuffer.Ptr = shaderSource->GetBufferPointer();
+	shaderSourceBuffer.Size = shaderSource->GetBufferSize();
+	shaderSourceBuffer.Encoding = DXC_CP_UTF8; // UTF-8であることを通知
+
+	// Compileする
+	LPCWSTR arguments[] =
+	{
+		filePath.c_str(), // コンパイルするhlslファイル名
+		L"-E", L"main", // エントリーポイントの指定
+		L"-T", profile, // プロファイルの設定
+		L"-Zi", L"-Qembed_debug", // デバッグ用の情報を埋め込む
+		L"-Od", // 最適化をしない
+		L"-Zpr", // メモリレイアウトは行優先
+	};
+
+	// 実際にShaderをCompileする
+	IDxcResult* shaderResult = nullptr;
+	hr = dxcCompiler->Compile(
+		&shaderSourceBuffer,  // 読み込んだファイル
+		arguments, // コンパイルオプション
+		_countof(arguments),  // コンパイルオプションの数
+		includeHandler,  // includeを含んだ諸々
+		IID_PPV_ARGS(&shaderResult) // コンパイル結果
+	);
+
+	// dxcが起動できないなどの致命的な状況
+	assert(SUCCEEDED(hr));
+
+
+	// 警告・エラーが出ていないか確認する
+	// 出ていたらログに出して止める
+	IDxcBlobUtf8* shaderError = nullptr;
+	shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), nullptr);
+	if (shaderError != nullptr && shaderError->GetStringLength() != 0)
+	{
+		Logger::Log(shaderError->GetStringPointer());
+		// 警告・エラーが出ているので止める
+		assert(false);
+	}
+
+	// Compile結果を受け取って返す
+	// コンパイル結果から実行用のバイナリ部分を取得
+	Microsoft::WRL::ComPtr <IDxcBlob> shaderBlob = nullptr;
+	hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
+	assert(SUCCEEDED(hr));
+	// 成功したログを出す
+	Logger::Log(StringUtility::ConvertString(std::format(L"Compile Succeeded, path:{}, profile:{}\n", filePath, profile)));
+	// 実行用のバイナリを返却
+	return shaderBlob.Get();
+}
+
+Microsoft::WRL::ComPtr<ID3D12Resource> DirectXBasis::CreateBufferResources(size_t sizeInBytes)
+{
+	// VertexResourceを生成する
+	// 頂点リソース用のヒープの設定
+	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
+	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+	// 頂点リソースの設定
+	D3D12_RESOURCE_DESC vertexResourceDesc{};
+	// バッファリソース
+	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	vertexResourceDesc.Width = sizeInBytes;
+	// バッファの場合は以下を1にする
+	vertexResourceDesc.Height = 1;
+	vertexResourceDesc.DepthOrArraySize = 1;
+	vertexResourceDesc.MipLevels = 1;
+	vertexResourceDesc.SampleDesc.Count = 1;
+	// バッファの場合は以下の設定で行う
+	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	// 頂点リソースを作る
+	Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
+	HRESULT hr = device->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
+		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+		IID_PPV_ARGS(&resource));
+	assert(SUCCEEDED(hr));
+	return resource;
+}
+
+Microsoft::WRL::ComPtr<ID3D12Resource> DirectXBasis::CreateTextureResource(const DirectX::TexMetadata& metaData)
+{
+	// metaDataを基にResourcesの設定
+	D3D12_RESOURCE_DESC resourceDesc{};
+	resourceDesc.Width = UINT(metaData.width); // Textureの幅
+	resourceDesc.Height = UINT(metaData.height); // Textureの高さ
+	resourceDesc.MipLevels = UINT16(metaData.mipLevels); // mipmapの数
+	resourceDesc.DepthOrArraySize = UINT16(metaData.arraySize); //奥行き
+	resourceDesc.Format = metaData.format;
+	resourceDesc.SampleDesc.Count = 1; // サンプリングの数
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION(metaData.dimension); // Textureの次元数
+
+	// 利用するHeapの設定
+	D3D12_HEAP_PROPERTIES heapProperties{};
+	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+	// Resourcesの生成
+	Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
+	HRESULT hr = device->CreateCommittedResource(
+		&heapProperties, // Heapの設定
+		D3D12_HEAP_FLAG_NONE, // Heapの特殊な設定(特になし)
+		&resourceDesc, // Resourcesの設定
+		D3D12_RESOURCE_STATE_COPY_DEST, // データ転送される設定
+		nullptr, // Clear最適値
+		IID_PPV_ARGS(&resource) // 作成するResourcesポインタへのポインタ
+	);
+
+	assert(SUCCEEDED(hr));
+	return resource;
+}
+
+Microsoft::WRL::ComPtr<ID3D12Resource> DirectXBasis::UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource> texture, const DirectX::ScratchImage& mipImages)
+{
+	std::vector<D3D12_SUBRESOURCE_DATA> subreSources;
+	DirectX::PrepareUpload(device.Get(), mipImages.GetImages(), mipImages.GetImageCount(), mipImages.GetMetadata(), subreSources);
+	uint64_t intermediateSize = GetRequiredIntermediateSize(texture.Get(), 0, UINT(subreSources.size()));
+	Microsoft::WRL::ComPtr <ID3D12Resource> intermediateResource = CreateBufferResources(intermediateSize);
+	UpdateSubresources(commandList.Get(), texture.Get(), intermediateResource.Get(), 0, 0, UINT(subreSources.size()), subreSources.data());
+	// Textureへの転送後は利用できるようにResourceStateを変更する
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = texture.Get();
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
+	commandList->ResourceBarrier(1, &barrier);
+	return intermediateResource;
+}
+
+DirectX::ScratchImage DirectXBasis::LoadTexture(const std::string& filePath)
+{
+	// テクスチャファイルを読み込んでプログラムで扱えるようにする
+	DirectX::ScratchImage image{};
+	std::wstring filePathW = StringUtility::ConvertString(filePath);
+	HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+	assert(SUCCEEDED(hr));
+
+	// ミニマップの作成
+	DirectX::ScratchImage mipImages{};
+	hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
+	assert(SUCCEEDED(hr));
+
+	// ミニマップ付きのデータを返す
+	return mipImages;
 }
 
 void DirectXBasis::PreDraw()
@@ -466,6 +626,8 @@ void DirectXBasis::PostDraw()
 		WaitForSingleObject(fenceEvent, INFINITE);
 	}
 
+	// FPS固定
+	UpdateFixFPS();
 
 	// 次のフレーム用のコマンドリストを準備
 	hr = commandAllocator->Reset();
@@ -488,4 +650,38 @@ D3D12_GPU_DESCRIPTOR_HANDLE DirectXBasis::GetGPUDescriptorHandle(const Microsoft
 	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	handleGPU.ptr += (descriptorSize * index);
 	return handleGPU;
+}
+
+void DirectXBasis::InitializeFixFPS()
+{
+	// 現在時間を記録する
+	reference_ = std::chrono::steady_clock::now();
+}
+
+void DirectXBasis::UpdateFixFPS()
+{
+	// 1/60秒ぴったりの時間
+	const std::chrono::microseconds kMinTime(uint64_t(1000000.0f / 60.0f));
+	// 1/60秒よりわずかに短い時間
+	const std::chrono::microseconds kMinCheckTime(uint64_t(1000000.0f / 65.0f));
+
+	// 現在時間を取得する
+	std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+	// 前回記録からの経過時間を取得する
+	std::chrono::microseconds elapsed =
+		std::chrono::duration_cast<std::chrono::microseconds>(now - reference_);
+
+	// 1/60秒経っていない場合
+	if (elapsed < kMinCheckTime)
+	{
+		// 1/60秒経過するまでスリープを繰り返す
+		while (std::chrono::steady_clock::now() - reference_ < kMinCheckTime)
+		{
+			// 1マイクロ秒スリープ
+			std::this_thread::sleep_for(std::chrono::microseconds(1));
+		}
+	}
+
+	// 現在時間を記録する
+	reference_ = std::chrono::steady_clock::now();
 }
