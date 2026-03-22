@@ -21,6 +21,7 @@
 #include "D3DResourceLeakChecker.h"
 #include "SpriteManager.h"
 #include "Sprite.h"
+#include "TextureManager.h"
 
 #pragma warning(pop)
 
@@ -395,6 +396,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	dxBasis = new DirectXBasis();
 	dxBasis->Initialize(winAPIManager);
 
+	// テクスチャマネージャーの初期化
+	TextureManager::GetInstance()->Initialize(dxBasis);
+
 	// スプライト共通部のポインタ
 	SpriteManager* spriteManager = nullptr;
 	// スプライト共通部の初期化
@@ -444,10 +448,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 
 
 	// Textureを読んで転送する
-	DirectX::ScratchImage mipImages = dxBasis->LoadTexture("resources/uvChecker.png");
-	const DirectX::TexMetadata& metaData = mipImages.GetMetadata();
+	/*const DirectX::TexMetadata& metaData = mipImages.GetMetadata();
 	Microsoft::WRL::ComPtr <ID3D12Resource> textureResource = dxBasis->CreateTextureResource(metaData);
-	Microsoft::WRL::ComPtr <ID3D12Resource> intermediateResource = dxBasis->UploadTextureData(textureResource, mipImages);
+	Microsoft::WRL::ComPtr <ID3D12Resource> intermediateResource = dxBasis->UploadTextureData(textureResource, mipImages);*/
 
 	// 2枚目のTextureを読んで転送する
 	/*DirectX::ScratchImage mipImages2 = dxBasis->LoadTexture(modelData.material.textureFilePath);
@@ -468,17 +471,17 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
 	// metaDataを基にSRVを設定
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	srvDesc.Format = metaData.format;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = UINT(metaData.mipLevels);
+	//D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	//srvDesc.Format = metaData.format;
+	//srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	//srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	//srvDesc.Texture2D.MipLevels = UINT(metaData.mipLevels);
 
-	// srvを作成するDescriptHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = dxBasis->GetSRVCPUDescriptorHandle(1);
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = dxBasis->GetSRVGPUDescriptorHandle(1);
-	// srvの生成
-	dxBasis->GetDevice()->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
+	//// srvを作成するDescriptHeapの場所を決める
+	//D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = dxBasis->GetSRVCPUDescriptorHandle(1);
+	//D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = dxBasis->GetSRVGPUDescriptorHandle(1);
+	//// srvの生成
+	//dxBasis->GetDevice()->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
 
 	// metaDataを基に2枚目のSRVを設定
 	//D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2{};
@@ -671,13 +674,15 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 
 	// スプライトの初期化
 	std::vector<Sprite*> sprites;
+	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 	for (uint32_t i = 0; i < 5; ++i)
 	{
 		Sprite* sprite = new Sprite();
-		sprite->Initialize(spriteManager);
+		sprite->Initialize(spriteManager, "resources/uvChecker.png");
 		sprites.push_back(sprite);
 	}
 
+	
 	// スプライト切り替えフラグ
 	bool useMonsterBall = true;
 
@@ -816,6 +821,8 @@ materialData->uvTransform = uvTransformMatrix;*/
 		// 描画後処理
 		dxBasis->PostDraw();
 
+		TextureManager::GetInstance()->ReleaseIntermediateResources();
+
 	}
 
 #ifdef USE_IMGUI
@@ -829,6 +836,9 @@ materialData->uvTransform = uvTransformMatrix;*/
 
 	// 解放処理
 	CloseHandle(fenceEvent);
+
+	// テクスチャマネージャーの終了
+	TextureManager::GetInstance()->Finalize();
 
 	delete input;
 	for (Sprite* sprite : sprites)

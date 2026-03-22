@@ -1,8 +1,9 @@
 ﻿#include "Sprite.h"
 #include "SpriteManager.h"
+#include "TextureManager.h"
 using namespace MathManager;
 
-void Sprite::Initialize(SpriteManager* spriteManager)
+void Sprite::Initialize(SpriteManager* spriteManager, std::string textureFilePath)
 {
 	// 引数で受け取ってメンバ変数に記録する
 	this->spriteManager_ = spriteManager;
@@ -16,6 +17,12 @@ void Sprite::Initialize(SpriteManager* spriteManager)
 
 	// 座標変換行列データ作成
 	CreateTransformMatrixData();
+
+	// 単位行列を書き込んでおく
+	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+
+	// テクスチャのサイズをイメージに合わせる
+	AdjustTextureSize();
 
 }
 
@@ -85,19 +92,44 @@ void Sprite::Update()
 	indexData[4] = 3;
 	indexData[5] = 2;
 
+	float left = 0.0f - anchorPoint.x;
+	float right = 1.0f - anchorPoint.x;
+	float top = 0.0f - anchorPoint.y;
+	float bottom = 1.0f - anchorPoint.y;
+
+	// 左右反転
+	if (isFlipX_)
+	{
+		left = -left;
+		right = -right;
+	}
+
+	// 上下反転
+	if (isFlipY_)
+	{
+		top = -top;
+		bottom = -bottom;
+	}
+
+	const DirectX::TexMetadata& metaData =
+		TextureManager::GetInstance()->GetMetaData(textureIndex);
+	float tex_left = textureLeftTop.x / metaData.width;
+	float tex_right = (textureLeftTop.x + textureSize.x) / metaData.width;
+	float tex_top = textureLeftTop.y / metaData.height;
+	float tex_bottom = (textureLeftTop.y + textureSize.y) / metaData.height;
 
 	// 1枚目
-	vertexData[0].position = { 0.0f,1.0f,0.0f,1.0f }; // 左下
-	vertexData[0].texcoord = { 0.0f,1.0f };
+	vertexData[0].position = { left,bottom,0.0f,1.0f }; // 左下
+	vertexData[0].texcoord = { tex_left,tex_bottom };
 	vertexData[0].normal = { 0.0f,0.0f,-1.0f };
-	vertexData[1].position = { 0.0f,0.0f,0.0f,1.0f }; // 左上
-	vertexData[1].texcoord = { 0.0f,0.0f };
+	vertexData[1].position = { left,top,0.0f,1.0f }; // 左上
+	vertexData[1].texcoord = { tex_left,tex_top };
 	vertexData[1].normal = { 0.0f,0.0f,-1.0f };
-	vertexData[2].position = { 1.0f,1.0f,0.0f,1.0f }; // 右下
-	vertexData[2].texcoord = { 1.0f,1.0f };
+	vertexData[2].position = { right,bottom,0.0f,1.0f }; // 右下
+	vertexData[2].texcoord = { tex_right,tex_bottom };
 	vertexData[2].normal = { 0.0f,0.0f,-1.0f };
-	vertexData[3].position = { 1.0f,0.0f,0.0f,1.0f }; // 左上
-	vertexData[3].texcoord = { 1.0f,0.0f };
+	vertexData[3].position = { right,top,0.0f,1.0f }; // 右上
+	vertexData[3].texcoord = { tex_right,tex_top };
 	vertexData[3].normal = { 0.0f,0.0f,-1.0f };
 
 	// Transform変数を作る
@@ -132,8 +164,19 @@ void Sprite::Draw()
 	// wvp用のCBufferの場所を設定
 	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationResource->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定
-	dxBasis_->GetCommandList()->SetGraphicsRootDescriptorTable(2, dxBasis_->GetSRVGPUDescriptorHandle(1));
+	dxBasis_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSRVHandleGPU(textureIndex));
 	
 	// 描画
 	dxBasis_->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+}
+
+void Sprite::AdjustTextureSize()
+{
+	// テクスチャメタデータを取得
+	const DirectX::TexMetadata& metaData = TextureManager::GetInstance()->GetMetaData(textureIndex);
+
+	textureSize.x = static_cast<float>(metaData.width);
+	textureSize.y = static_cast<float>(metaData.height);
+	// 画像サイズをテクスチャサイズに合わせる
+	size = textureSize;
 }

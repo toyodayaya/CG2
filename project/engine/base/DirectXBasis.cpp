@@ -16,6 +16,8 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 #include <externals/DirectXTex/d3dx12.h>
 #include <thread>
 
+const uint32_t DirectXBasis::kMaxSRVCount = 512;
+
 void DirectXBasis::Initialize(WinAPIManager* winApiManager)
 {
 	// NULL検出
@@ -262,7 +264,7 @@ void DirectXBasis::DescriptorHeapGenerate()
 	// RTV用のディスクリプタヒープを作成
 	rtvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
 	// SRV用のディスクリプタヒープを作成
-	srvDescriptHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
+	srvDescriptHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
 	// DSV用のディスクリプタヒープを作成
 	dsvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
 
@@ -516,13 +518,14 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXBasis::CreateTextureResource(const
 	return resource;
 }
 
+[[nodiscard]]
 Microsoft::WRL::ComPtr<ID3D12Resource> DirectXBasis::UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource> texture, const DirectX::ScratchImage& mipImages)
 {
-	std::vector<D3D12_SUBRESOURCE_DATA> subreSources;
-	DirectX::PrepareUpload(device.Get(), mipImages.GetImages(), mipImages.GetImageCount(), mipImages.GetMetadata(), subreSources);
-	uint64_t intermediateSize = GetRequiredIntermediateSize(texture.Get(), 0, UINT(subreSources.size()));
+	std::vector<D3D12_SUBRESOURCE_DATA> subResources;
+	DirectX::PrepareUpload(device.Get(), mipImages.GetImages(), mipImages.GetImageCount(), mipImages.GetMetadata(), subResources);
+	uint64_t intermediateSize = GetRequiredIntermediateSize(texture.Get(), 0, UINT(subResources.size()));
 	Microsoft::WRL::ComPtr <ID3D12Resource> intermediateResource = CreateBufferResources(intermediateSize);
-	UpdateSubresources(commandList.Get(), texture.Get(), intermediateResource.Get(), 0, 0, UINT(subreSources.size()), subreSources.data());
+	UpdateSubresources(commandList.Get(), texture.Get(), intermediateResource.Get(), 0, 0, UINT(subResources.size()), subResources.data());
 	// Textureへの転送後は利用できるようにResourceStateを変更する
 	D3D12_RESOURCE_BARRIER barrier{};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -535,22 +538,6 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXBasis::UploadTextureData(const Mic
 	return intermediateResource;
 }
 
-DirectX::ScratchImage DirectXBasis::LoadTexture(const std::string& filePath)
-{
-	// テクスチャファイルを読み込んでプログラムで扱えるようにする
-	DirectX::ScratchImage image{};
-	std::wstring filePathW = StringUtility::ConvertString(filePath);
-	HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
-	assert(SUCCEEDED(hr));
-
-	// ミニマップの作成
-	DirectX::ScratchImage mipImages{};
-	hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
-	assert(SUCCEEDED(hr));
-
-	// ミニマップ付きのデータを返す
-	return mipImages;
-}
 
 void DirectXBasis::PreDraw()
 {

@@ -28,6 +28,7 @@ private:
 	// 記録時間(FPS固定用)
 	std::chrono::steady_clock::time_point reference_;
 
+	
 public:
 	// 初期化
 	void Initialize(WinAPIManager* winApiManager);
@@ -90,13 +91,10 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metaData);
 
 	// UploadTextureData関数
-	[[nodiscard]]
 	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource> texture,
 		const DirectX::ScratchImage& mipImages);
 
-	// LoadTexture関数
-	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
-
+	
 	// 描画前処理
 	void PreDraw();
 
@@ -106,6 +104,9 @@ public:
 	// getter
 	ID3D12Device* GetDevice() const { return device.Get(); }
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
+
+	// 最大SRV数(最大テクスチャ枚数)
+	static const uint32_t kMaxSRVCount;
 
 private:
 	HRESULT hr;
@@ -156,5 +157,7 @@ private:
 	IDxcCompiler3* dxcCompiler;
 	// WindowsAPI
 	WinAPIManager* winApiManager_ = nullptr;
+
+	
 };
 

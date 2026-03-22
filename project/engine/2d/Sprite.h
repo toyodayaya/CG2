@@ -2,7 +2,7 @@
 #include "MathManager.h"
 #include <wrl.h>
 #include <d3d12.h>
-#include <stdint.h>
+#include <string>
 
 class SpriteManager;
 class DirectXBasis;
@@ -32,7 +32,7 @@ class Sprite
 {
 public:
 	// 初期化
-	void Initialize(SpriteManager* spriteManager);
+	void Initialize(SpriteManager* spriteManager,std::string textureFilePath);
 
 	// 頂点データ作成
 	void CreateVertexData();
@@ -54,11 +54,21 @@ public:
 	float GetRotation() const { return rotation; }
 	const Vector4& GetColor() const { return materialData->color; }
 	const Vector2& GetSize() const { return size; }
+	const Vector2& GetAnchorPoint() const { return anchorPoint; }
+	bool GetFlipX() const { return isFlipX_; }
+	bool GetFlipY() const { return isFlipY_; }
+	const Vector2& GetTextureLeftTop() const { return textureLeftTop; }
+	const Vector2& GetTextureSize() const { return textureSize; }
 	// setter
 	void SetPosition(const Vector2& position) { this->pos = position; }
 	void SetRotation(float rotation) { this->rotation = rotation; }
 	void SetColor(const Vector4& color) { materialData->color = color; }
 	void SetSize(const Vector2& size) { this->size = size; }
+	void SetAnchorPoint(const Vector2& anchorPoint) { this->anchorPoint = anchorPoint; }
+	void SetFlipX(bool isFlipX) { this->isFlipX_ = isFlipX; }
+	void SetFlipY(bool isFlipY) { this->isFlipY_ = isFlipY; }
+	void SetTextureLeftTop(const Vector2& leftTop) { this->textureLeftTop = leftTop; }
+	void SetTextureSize(const Vector2& textureSize) { this->textureSize = textureSize; }
 
 private:
 	// ポインタ
@@ -95,4 +105,21 @@ private:
 	float rotation = 0.0f;
 	// サイズ
 	Vector2 size = { 640.0f,360.0f };
+	// アンカーポイント
+	Vector2 anchorPoint = { 0.0f,0.0f };
+	// 左右フリップ
+	bool isFlipX_ = false;
+	// 上下フリップ
+	bool isFlipY_ = false;
+	// テクスチャ左上座標
+	Vector2 textureLeftTop = { 0.0f,0.0f };
+	// テクスチャ切り出しサイズ
+	Vector2 textureSize = { 100.0f,100.0f };
+
+	// テクスチャ番号
+	uint32_t textureIndex = 0;
+
+private:
+	// テクスチャサイズをイメージに合わせる
+	void AdjustTextureSize();
 };

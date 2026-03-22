@@ -14,7 +14,7 @@ public:
 	void DrawSettingCommon();
 	// getter
 	DirectXBasis* GetDxBasis() const { return dxBasis_; }
-
+	
 private:
 	// ポインタ
 	DirectXBasis* dxBasis_ = nullptr;
