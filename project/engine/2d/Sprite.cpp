@@ -1,9 +1,9 @@
 ﻿#include "Sprite.h"
-#include "SpriteManager.h"
+#include "SpriteCommon.h"
 #include "TextureManager.h"
 using namespace MathManager;
 
-void Sprite::Initialize(SpriteManager* spriteManager, std::string textureFilePath)
+void Sprite::Initialize(SpriteCommon* spriteManager, std::string textureFilePath)
 {
 	// 引数で受け取ってメンバ変数に記録する
 	this->spriteManager_ = spriteManager;

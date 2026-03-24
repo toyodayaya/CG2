@@ -4,7 +4,7 @@
 #include <d3d12.h>
 #include <string>
 
-class SpriteManager;
+class SpriteCommon;
 class DirectXBasis;
 
 struct VertexData
@@ -32,7 +32,7 @@ class Sprite
 {
 public:
 	// 初期化
-	void Initialize(SpriteManager* spriteManager,std::string textureFilePath);
+	void Initialize(SpriteCommon* spriteManager,std::string textureFilePath);
 
 	// 頂点データ作成
 	void CreateVertexData();
@@ -72,7 +72,7 @@ public:
 
 private:
 	// ポインタ
-	SpriteManager* spriteManager_;
+	SpriteCommon* spriteManager_;
 	DirectXBasis* dxBasis_;
 
 	// Index用の頂点リソース

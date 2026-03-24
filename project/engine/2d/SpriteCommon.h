@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "DirectXBasis.h"
 
-class SpriteManager
+class SpriteCommon
 {
 public:
 	// 初期化

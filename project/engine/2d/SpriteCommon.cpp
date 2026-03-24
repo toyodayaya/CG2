@@ -1,7 +1,7 @@
-﻿#include "SpriteManager.h"
+﻿#include "SpriteCommon.h"
 #include "Logger.h"
 
-void SpriteManager::Initialize(DirectXBasis* directXBasis)
+void SpriteCommon::Initialize(DirectXBasis* directXBasis)
 {
 	// 引数で受け取ってメンバ変数として記録する
 	dxBasis_ = directXBasis;
@@ -10,7 +10,7 @@ void SpriteManager::Initialize(DirectXBasis* directXBasis)
 	GenerateGraphicsPipeline();
 }
 
-void SpriteManager::CreateRootSignature()
+void SpriteCommon::CreateRootSignature()
 {
 	// RootSignatureを作成
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
@@ -73,7 +73,7 @@ void SpriteManager::CreateRootSignature()
 
 }
 
-void SpriteManager::GenerateGraphicsPipeline()
+void SpriteCommon::GenerateGraphicsPipeline()
 {
 	// ルートシグネチャーの作成
 	CreateRootSignature();
@@ -165,7 +165,7 @@ void SpriteManager::GenerateGraphicsPipeline()
 
 }
 
-void SpriteManager::DrawSettingCommon()
+void SpriteCommon::DrawSettingCommon()
 {
 	// RootSignatureを設定
 	dxBasis_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
