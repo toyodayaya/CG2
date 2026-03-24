@@ -4,37 +4,38 @@
 #include <wrl.h>
 #include <d3d12.h>
 
-struct VertexData3d
-{
-	Vector4 position;
-	Vector2 texcoord;
-	Vector3 normal;
-};
-
-struct  Material3d
-{
-	Vector4 color;
-	int32_t enableLighting;
-	float padding[3];
-	Matrix4x4 uvTransform;
-};
-
-struct MaterialData
-{
-	std::string textureFilePath;
-	uint32_t textureIndex = 0;
-};
-
-
-struct ModelData
-{
-	std::vector<VertexData3d> vertices;
-	MaterialData material;
-};
-
 
 class Model
 {
+private:
+	struct VertexData
+	{
+		Vector4 position;
+		Vector2 texcoord;
+		Vector3 normal;
+	};
+
+	struct  Material
+	{
+		Vector4 color;
+		int32_t enableLighting;
+		float padding[3];
+		Matrix4x4 uvTransform;
+	};
+
+	struct MaterialData
+	{
+		std::string textureFilePath;
+		uint32_t textureIndex = 0;
+	};
+
+
+	struct ModelData
+	{
+		std::vector<VertexData> vertices;
+		MaterialData material;
+	};
+
 public:
 	// 初期化
 	void Initialize(ModelCommon* modelManager, const std::string& directoryPath, const std::string& filePath);
@@ -50,6 +51,8 @@ public:
 	void CreateMaterialData3d();
 
 private:
+
+
 	ModelCommon* modelManager = nullptr;
 	DirectXBasis* dxBasis_;
 	// objファイルのデータ
@@ -59,9 +62,9 @@ private:
 	// 頂点バッファビュー
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	// 頂点データ
-	VertexData3d* vertexData = nullptr;
+	VertexData* vertexData = nullptr;
 	// マテリアルリソース
 	Microsoft::WRL::ComPtr <ID3D12Resource> materialResource;
-	Material3d* materialData = nullptr;
+	Material* materialData = nullptr;
 };
 

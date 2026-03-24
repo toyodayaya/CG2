@@ -32,7 +32,7 @@ void Model::Initialize(ModelCommon* modelManager, const std::string& directoryPa
 
 }
 
-MaterialData Model::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
+Model::MaterialData Model::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
 {
 	// 必要な変数を宣言する
 	MaterialData materialData; // 構築するMaterialData
@@ -63,7 +63,7 @@ MaterialData Model::LoadMaterialTemplateFile(const std::string& directoryPath, c
 	return materialData;
 }
 
-ModelData Model::LoadObjFile(const std::string& directoryPath, const std::string& fileName)
+Model::ModelData Model::LoadObjFile(const std::string& directoryPath, const std::string& fileName)
 {
 	// 必要な変数を宣言する
 	ModelData modelData; // 構築するModelData
@@ -90,26 +90,23 @@ ModelData Model::LoadObjFile(const std::string& directoryPath, const std::string
 			Vector4 position;
 			s >> position.x >> position.y >> position.z;
 			position.w = 1.0f;
-			position.x *= -1.0f;
 			positions.push_back(position);
 		}
 		else if (identifier == "vt")
 		{
 			Vector2 texcoord;
 			s >> texcoord.x >> texcoord.y;
-			texcoord.y = 1.0f - texcoord.y;
 			texcoords.push_back(texcoord);
 		}
 		else if (identifier == "vn")
 		{
 			Vector3 normal;
 			s >> normal.x >> normal.y >> normal.z;
-			normal.x *= -1.0f;
 			normals.push_back(normal);
 		}
 		else if (identifier == "f")
 		{
-			VertexData3d triangle[3];
+			VertexData triangle[3];
 			// 三角形を作る
 			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex)
 			{
@@ -128,6 +125,11 @@ ModelData Model::LoadObjFile(const std::string& directoryPath, const std::string
 				Vector4 position = positions[elementIndices[0] - 1];
 				Vector2 texcoord = texcoords[elementIndices[1] - 1];
 				Vector3 normal = normals[elementIndices[2] - 1];
+
+				position.x *= -1.0f;
+				texcoord.y = 1.0f - texcoord.y;
+				normal.x *= -1.0f;
+
 				triangle[faceVertex] = { position,texcoord,normal };
 			}
 			modelData.vertices.push_back(triangle[2]);
@@ -152,22 +154,22 @@ void Model::CreateVertexData3d()
 {
 	// VertexResourceを生成する
 	// 頂点リソースを作る
-	vertexResource = dxBasis_->CreateBufferResources(sizeof(VertexData3d) * modelData.vertices.size());
+	vertexResource = dxBasis_->CreateBufferResources(sizeof(VertexData) * modelData.vertices.size());
 
 	// 頂点バッファビューを作成する
 
 	// リソースの先頭のアドレスから使う
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
 	// 使用するリソースのサイズは頂点3つ分のサイズ
-	vertexBufferView.SizeInBytes = UINT(sizeof(VertexData3d) * modelData.vertices.size());
+	vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
 	// 1頂点あたりのサイズ
-	vertexBufferView.StrideInBytes = sizeof(VertexData3d);
+	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
 	// 頂点リソースにデータを書き込む
 	// 書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 	// 頂点データにリソースをコピー
-	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData3d) * modelData.vertices.size());
+	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
 
 
 }
@@ -175,7 +177,7 @@ void Model::CreateVertexData3d()
 void Model::CreateMaterialData3d()
 {
 	// マテリアルリソースを作る
-	materialResource = dxBasis_->CreateBufferResources(sizeof(Material3d) * modelData.vertices.size());
+	materialResource = dxBasis_->CreateBufferResources(sizeof(Material) * modelData.vertices.size());
 	// マテリアルにデータを書き込む
 	// 書き込むためのアドレスを取得
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
