@@ -1,5 +1,6 @@
-﻿#pragma once
+#pragma once
 #include "DirectXBasis.h"
+#include "Camera.h"
 
 class Object3dCommon
 {
@@ -14,6 +15,9 @@ public:
 	void DrawSettingCommon();
 	// getter
 	DirectXBasis* GetDxBasis() const { return dxBasis_; }
+	Camera* GetDefaultCamera() const { return defaultCamera_; }
+	// setter
+	void SetDefaultCamera(Camera* camera) { this->defaultCamera_ = camera; }
 
 private:
 	// ポインタ
@@ -22,6 +26,9 @@ private:
 	Microsoft::WRL::ComPtr <ID3D12RootSignature> rootSignature;
 	// グラフィックスパイプラインステート
 	Microsoft::WRL::ComPtr <ID3D12PipelineState> graphicPipelineState;
+
+	// デフォルトカメラ
+	Camera* defaultCamera_ = nullptr;
 
 };
 

@@ -1,4 +1,4 @@
-﻿#include "Model.h"
+#include "Model.h"
 #include "ModelCommon.h"
 #include "TextureManager.h"
 #include "MathManager.h"
@@ -196,7 +196,7 @@ void Model::Draw()
 	// マテリアルCBufferの場所を設定
 	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定
-	dxBasis_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSRVHandleGPU(modelData.material.textureIndex));
+	dxBasis_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSRVHandleGPU(modelData.material.textureFilePath));
 	// 描画
 	dxBasis_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 }

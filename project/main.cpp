@@ -27,6 +27,8 @@
 #include "ModelCommon.h"
 #include "Model.h"
 #include "ModelManager.h"
+#include "Camera.h"
+#include "SrvManager.h"
 
 #pragma warning(pop)
 
@@ -85,47 +87,6 @@ static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception)
 	MiniDumpWriteDump(GetCurrentProcess(), processId, dumpfileHandle, MiniDumpNormal, &minidumpInformation, nullptr, nullptr);
 	// 他に関連づけられているSEH例外ハンドラがあれば実行
 	return EXCEPTION_EXECUTE_HANDLER;
-}
-
-
-
-// DepthStencilTextureの作成関数
-Microsoft::WRL::ComPtr <ID3D12Resource> CreateDepthStancilTextureResource(const Microsoft::WRL::ComPtr <ID3D12Device> device,
-	int32_t width, int32_t height)
-{
-	// 生成するResourceの設定
-	D3D12_RESOURCE_DESC resourceDesc{};
-	resourceDesc.Width = width; // Textureの幅
-	resourceDesc.Height = height; // Textureの高さ
-	resourceDesc.MipLevels = 1; // mipmapの数
-	resourceDesc.DepthOrArraySize = 1; // 奥行き
-	resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // 利用可能なフォーマット
-	resourceDesc.SampleDesc.Count = 1; // サンプリングカウント
-	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D; // 2次元
-	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL; // DepthStencilとして使う通知
-
-	// 利用するHeapの設定
-	D3D12_HEAP_PROPERTIES heapProperties{};
-	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT; // VRAM上に作る
-
-	// 深度値のクリア設定
-	D3D12_CLEAR_VALUE depthClearValue{};
-	depthClearValue.DepthStencil.Depth = 1.0f; // 最大値でクリア
-	depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // Format(Resourceと合わせる)
-
-	// Resourceの生成
-	Microsoft::WRL::ComPtr <ID3D12Resource> resource = nullptr;
-	HRESULT hr = device->CreateCommittedResource(
-		&heapProperties, // Heapの設定
-		D3D12_HEAP_FLAG_NONE, // Heapの特殊な設定(特になし)
-		&resourceDesc, // Resourceの設定
-		D3D12_RESOURCE_STATE_DEPTH_WRITE, // 深度値を書き込む状態に設定
-		&depthClearValue, // Clear最適値
-		IID_PPV_ARGS(&resource) // 作成するResourcesポインタへのポインタ
-	);
-
-	assert(SUCCEEDED(hr));
-	return resource;
 }
 
 
@@ -260,8 +221,18 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	dxBasis = new DirectXBasis();
 	dxBasis->Initialize(winAPIManager);
 
+	// SRVマネージャーの初期化
+	SrvManager* srvManager = nullptr;
+	srvManager = new SrvManager();
+	srvManager->Initialize(dxBasis);
+
+	// カメラの初期化
+	Camera* camera = new Camera();
+	camera->SetRotate({ 0.0f,0.0f,0.0f });
+	camera->SetTranslate({ 0.0f,0.0f,-10.0f });
+
 	// テクスチャマネージャーの初期化
-	TextureManager::GetInstance()->Initialize(dxBasis);
+	TextureManager::GetInstance()->Initialize(dxBasis,srvManager);
 
 	// スプライト共通部のポインタ
 	SpriteCommon* spriteManager = nullptr;
@@ -274,6 +245,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	// 3dオブジェクト共通部の初期化
 	object3dCommon = new Object3dCommon();
 	object3dCommon->Initialize(dxBasis);
+	object3dCommon->SetDefaultCamera(camera);
 
 	// 3Dモデルマネージャーの初期化
 	ModelManager::GetInstance()->Initialize(dxBasis);
@@ -408,6 +380,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 		//#endif // USE_IMGUI
 
 		
+		// カメラの更新
+		camera->Update();
 		
 		// 3Dモデルの更新処理
 		for (Object3d* object3d : object3ds)
@@ -425,6 +399,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 		// 描画処理
 		// 描画前処理
 		dxBasis->PreDraw();
+		srvManager->PreDraw();
 
 		// 3dモデルの描画準備
 		object3dCommon->DrawSettingCommon();
@@ -490,6 +465,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	}
 	
 	delete object3dCommon;
+	delete camera;
+	delete srvManager;
 	delete dxBasis;
 
 	// xAudio2解放

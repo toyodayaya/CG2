@@ -124,3 +124,15 @@ vsync
 countof
 wfex
 dumpfile
+Sprite
+Initialize
+Count
+Manager
+assert
+Texture
+Depth
+Stencil
+Format
+Resource
+Resources
+Allocate

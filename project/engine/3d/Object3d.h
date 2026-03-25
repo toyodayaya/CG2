@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <string>
 #include <vector>
 #include <wrl.h>
@@ -6,6 +6,7 @@
 #include "DirectXBasis.h"
 #include "MathManager.h"
 #include "Model.h"
+#include "Camera.h"
 
 class Object3dCommon;
 
@@ -44,6 +45,7 @@ public:
 	void SetScale(const Vector3& scale) { this->transform.scale = scale; }
 	void SetRotate(const Vector3& rotate) { this->transform.rotate = rotate; }
 	void SetTranslate(const Vector3& translate) { this->transform.translate = translate; }
+	void SetCamera(Camera* camera) { this->camera = camera; }
 
 	// getter
 	const Vector3& GetScale() const { return transform.scale; }
@@ -56,6 +58,7 @@ private:
 	Object3dCommon* object3dManager = nullptr;
 	DirectXBasis* dxBasis_;
 	Model* model = nullptr;
+	Camera* camera = nullptr;
 	
 	// WVP用のリソースを作る
 	Microsoft::WRL::ComPtr <ID3D12Resource> transformationResource;
@@ -65,7 +68,8 @@ private:
 	Microsoft::WRL::ComPtr <ID3D12Resource> directionalLightResource;
 	// データを書き込む
 	DirectionalLight* directionalLightData = nullptr;
-	
+
+
 	Transform cameraTransform;
 	Transform transform;
 };

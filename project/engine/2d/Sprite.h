@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "MathManager.h"
 #include <wrl.h>
 #include <d3d12.h>
@@ -121,6 +121,8 @@ private:
 
 	// テクスチャ番号
 	uint32_t textureIndex = 0;
+
+	std::string filePath;
 
 private:
 	// テクスチャサイズをイメージに合わせる

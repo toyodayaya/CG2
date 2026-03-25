@@ -1,4 +1,4 @@
-﻿#include "Sprite.h"
+#include "Sprite.h"
 #include "SpriteCommon.h"
 #include "TextureManager.h"
 using namespace MathManager;
@@ -8,6 +8,7 @@ void Sprite::Initialize(SpriteCommon* spriteManager, std::string textureFilePath
 	// 引数で受け取ってメンバ変数に記録する
 	this->spriteManager_ = spriteManager;
 	dxBasis_ = spriteManager->GetDxBasis();
+	filePath = textureFilePath;
 
 	// 頂点データ作成
 	CreateVertexData();
@@ -112,7 +113,7 @@ void Sprite::Update()
 	}
 
 	const DirectX::TexMetadata& metaData =
-		TextureManager::GetInstance()->GetMetaData(textureIndex);
+		TextureManager::GetInstance()->GetMetaData(filePath);
 	float tex_left = textureLeftTop.x / metaData.width;
 	float tex_right = (textureLeftTop.x + textureSize.x) / metaData.width;
 	float tex_top = textureLeftTop.y / metaData.height;
@@ -164,7 +165,7 @@ void Sprite::Draw()
 	// wvp用のCBufferの場所を設定
 	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationResource->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定
-	dxBasis_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSRVHandleGPU(textureIndex));
+	dxBasis_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSRVHandleGPU(filePath));
 	
 	// 描画
 	dxBasis_->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
@@ -173,7 +174,7 @@ void Sprite::Draw()
 void Sprite::AdjustTextureSize()
 {
 	// テクスチャメタデータを取得
-	const DirectX::TexMetadata& metaData = TextureManager::GetInstance()->GetMetaData(textureIndex);
+	const DirectX::TexMetadata& metaData = TextureManager::GetInstance()->GetMetaData(filePath);
 
 	textureSize.x = static_cast<float>(metaData.width);
 	textureSize.y = static_cast<float>(metaData.height);

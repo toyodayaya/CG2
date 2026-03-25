@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <wrl.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -55,9 +55,6 @@ public:
 	// レンダーターゲットビューの初期化
 	void RenderTargetViewInitialize();
 
-	// SRV専用のディスクリプタハンドル取得関数
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);
-	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
 
 	// 深度ステンシルビューの初期化
 	void dsvInitialize();
@@ -105,9 +102,7 @@ public:
 	ID3D12Device* GetDevice() const { return device.Get(); }
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
 
-	// 最大SRV数(最大テクスチャ枚数)
-	static const uint32_t kMaxSRVCount;
-
+	
 private:
 	HRESULT hr;
 	// DXGIファクトリー
@@ -129,13 +124,10 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
 	// ディスクリプタサイズ
-	uint32_t descriptorSizeSRV;
 	uint32_t descriptorSizeRTV;
 	uint32_t descriptorSizeDSV;
 	// RTV用のディスクリプタヒープを作成
 	Microsoft::WRL::ComPtr <ID3D12DescriptorHeap> rtvDescriptorHeap;
-	// SRV用のディスクリプタヒープを作成
-	Microsoft::WRL::ComPtr <ID3D12DescriptorHeap> srvDescriptHeap;
 	// DSV用のディスクリプタヒープを作成
 	Microsoft::WRL::ComPtr <ID3D12DescriptorHeap> dsvDescriptorHeap; 
 	Microsoft::WRL::ComPtr <ID3D12Resource> depthStencilResource;
