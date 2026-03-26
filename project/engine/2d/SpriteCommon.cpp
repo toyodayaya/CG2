@@ -1,4 +1,4 @@
-﻿#include "SpriteCommon.h"
+#include "SpriteCommon.h"
 #include "Logger.h"
 
 void SpriteCommon::Initialize(DirectXBasis* directXBasis)
@@ -101,7 +101,7 @@ void SpriteCommon::GenerateGraphicsPipeline()
 	// 全ての色要素を書き込む
 	blendDesc.RenderTarget[0].RenderTargetWriteMask =
 		D3D12_COLOR_WRITE_ENABLE_ALL;
-
+	
 	// RasterizerStateの設定を行う
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
 	// 三角形の中を塗りつぶす

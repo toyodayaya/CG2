@@ -1,4 +1,4 @@
-﻿#include "MathManager.h"
+#include "MathManager.h"
 #include <cmath>
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -196,6 +196,15 @@ namespace MathManager
 		ret.m[3][3] = (1.0f / a) * ((m.m[0][0] * m.m[1][1] * m.m[2][2]) + (m.m[0][1] * m.m[1][2] * m.m[2][0]) + (m.m[0][2] * m.m[1][0] * m.m[2][1])
 			- (m.m[0][2] * m.m[1][1] * m.m[2][0]) - (m.m[0][1] * m.m[1][0] * m.m[2][2]) - (m.m[0][0] * m.m[1][2] * m.m[2][1]));
 
+		return ret;
+	}
+
+	Vector3 Vector3Add(const Vector3& v1, const Vector3& v2)
+	{
+		Vector3 ret;
+		ret.x = v1.x + v2.x;
+		ret.y = v1.y + v2.y;
+		ret.z = v1.z + v2.z;
 		return ret;
 	}
 

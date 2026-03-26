@@ -10,7 +10,7 @@
 
 class Object3dCommon;
 
-struct TransformationMatrix3d
+struct TransformationMatrix
 {
 	Matrix4x4 WVP;
 	Matrix4x4 World;
@@ -63,7 +63,7 @@ private:
 	// WVP用のリソースを作る
 	Microsoft::WRL::ComPtr <ID3D12Resource> transformationResource;
 	// データを書き込む
-	TransformationMatrix3d* transformationData = nullptr;
+    TransformationMatrix* transformationData = nullptr;
 	// 平行光源リソース
 	Microsoft::WRL::ComPtr <ID3D12Resource> directionalLightResource;
 	// データを書き込む

@@ -37,7 +37,7 @@ void Object3d::Initialize(Object3dCommon* object3dManager)
 void Object3d::CreateTransformMatrixData3d()
 {
 	// WVP用のリソースを作る
-	transformationResource = dxBasis_->CreateBufferResources(sizeof(TransformationMatrix3d));
+	transformationResource = dxBasis_->CreateBufferResources(sizeof(TransformationMatrix));
 	// データを書き込む
 	// 書き込むためのアドレスを取得
 	transformationResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationData));

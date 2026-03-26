@@ -1,4 +1,4 @@
-﻿#include "Object3dCommon.h"
+#include "Object3dCommon.h"
 #include "Logger.h"
 using namespace Logger;
 
