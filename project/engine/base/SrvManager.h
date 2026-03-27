@@ -16,7 +16,7 @@ public:
 	// SRV生成(テクスチャ用)
 	void CreateSRVforTexture2D(uint32_t index, ID3D12Resource* pResource, DXGI_FORMAT format, UINT mipLevels);
 	// SRV生成(StructuredBuffer用)
-	void CreateSRVforStructuredBuffer(uint32_t index, ID3D12Resource* pResource, DXGI_FORMAT format, UINT numElements,
+	void CreateSRVforStructuredBuffer(uint32_t index, Microsoft::WRL::ComPtr <ID3D12Resource> pResource, DXGI_FORMAT format, UINT numElements,
 		UINT structureByteStride);
 
 	// 描画前処理

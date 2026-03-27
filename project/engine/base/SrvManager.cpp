@@ -44,7 +44,7 @@ void SrvManager::CreateSRVforTexture2D(uint32_t index, ID3D12Resource* pResource
 
 }
 
-void SrvManager::CreateSRVforStructuredBuffer(uint32_t index, ID3D12Resource* pResource, DXGI_FORMAT format, UINT numElements, UINT structureByteStride)
+void SrvManager::CreateSRVforStructuredBuffer(uint32_t index, Microsoft::WRL::ComPtr <ID3D12Resource> pResource, DXGI_FORMAT format, UINT numElements, UINT structureByteStride)
 {
 	// SRVを生成
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
@@ -59,7 +59,7 @@ void SrvManager::CreateSRVforStructuredBuffer(uint32_t index, ID3D12Resource* pR
 	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
 	// srvの生成
-	dxBasis_->GetDevice()->CreateShaderResourceView(pResource, &srvDesc, GetCPUDescriptorHandle(index));
+	dxBasis_->GetDevice()->CreateShaderResourceView(pResource.Get(), &srvDesc, GetCPUDescriptorHandle(index));
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE SrvManager::GetCPUDescriptorHandle(uint32_t index)
