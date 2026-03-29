@@ -1,5 +1,6 @@
 #include "Camera.h"
 #include "WinAPIManager.h"
+#include "ImguiManager.h"
 
 using namespace MathManager;
 
@@ -14,6 +15,13 @@ void Camera::Update()
 
 	// 合成行列の計算処理
 	viewProjectionMatrix = Multiply(viewMatrix,projectionMatrix);
+
+#ifdef USE_IMGUI
+
+
+
+#endif // USE_IMGUI
+
 
 }
 

@@ -2,11 +2,23 @@
 #include <cassert>
 
 const uint32_t SrvManager::kMaxSRVCount = 512;
+SrvManager* SrvManager::instance = nullptr;
+
+SrvManager* SrvManager::GetInstance()
+{
+	
+	if (instance == nullptr)
+	{
+		instance = new SrvManager;
+	}
+	return instance;
+}
 
 void SrvManager::Initialize(DirectXBasis* dxBasis)
 {
 	// 引数で受け取ってメンバ変数として記録する
 	this->dxBasis_ = dxBasis;
+	instance = this;
 
 	// SRV用のディスクリプタヒープを作成
 	descriptorHeap = dxBasis_->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);

@@ -15,9 +15,15 @@
 #include <dxcapi.h>
 #include <Logger.h>
 #include <StringUtility.h>
-#include <externals/imgui/imgui.h>
+
+#ifdef USE_IMGUI
 #include <externals/imgui/imgui_impl_dx12.h>
 #include <externals/imgui/imgui_impl_win32.h>
+#include <externals/imgui/imgui_impl_dx12.h>
+#endif // USE_IMGUI
+
+#include "ImguiManager.h"
+
 #include "D3DResourceLeakChecker.h"
 #include "SpriteCommon.h"
 #include "Sprite.h"
@@ -230,6 +236,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	srvManager = new SrvManager();
 	srvManager->Initialize(dxBasis);
 
+	// Imguiマネージャーの初期化
+	ImguiManager* imguiManager = nullptr;
+	imguiManager = new ImguiManager();
+	imguiManager->Initialize(winAPIManager, dxBasis, srvManager);
+
 	// カメラの初期化
 	Camera* camera = new Camera();
 	camera->SetRotate({ std::numbers::pi_v<float> / 3.0f,std::numbers::pi_v<float> ,0.0f });
@@ -255,7 +266,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	// 3Dモデルマネージャーの初期化
 	ModelManager::GetInstance()->Initialize(dxBasis);
 
-	
+
 	//　音声データ用の変数宣言
 	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
 	IXAudio2MasteringVoice* masterVoice;
@@ -330,7 +341,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	translate.scale = { 1.0f,1.0f,1.0f };
 	emitter = new ParticleEmitter("Particle", translate.translate, 0.5f, 2);
 
-	
+
 	// メインループ
 	MSG msg{};
 	// ウインドウの×ボタンが押されるまでループ
@@ -343,14 +354,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 			// ゲームループを抜ける
 			break;
 		}
-
-#ifdef USE_IMGUI
-		// ImGuiに通知
-		/*ImGui_ImplDX12_NewFrame();
-		ImGui_ImplWin32_NewFrame();
-		ImGui::NewFrame();*/
-#endif // USE_IMGUI
-
 
 		Transform uvTransformSprite
 		{
@@ -375,32 +378,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 			OutputDebugStringA("Hit 0\n");
 		}
 
-		//#ifdef USE_IMGUI
-		//		// 開発用UIの処理
-		//		ImGui::ShowDemoWindow();
-		//
-		//		ImGui::Checkbox("useMonsterBall", &useMonsterBall);
-		//
-		//		ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-		//		ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-		//		ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
-		//
-		//		ImGui::Separator();
-		//		ImGui::Text("Camera");
-		//		ImGui::DragFloat3("Camera Pos", &cameraTransform.translate.x, 0.1f);
-		//		ImGui::SliderAngle("Camera Rot X", &cameraTransform.rotate.x);
-		//		ImGui::SliderAngle("Camera Rot Y", &cameraTransform.rotate.y);
-		//		ImGui::SliderAngle("Camera Rot Z", &cameraTransform.rotate.z);
-		//
-		//		ImGui::Separator();
-		//		ImGui::Text("Model Rotation");
-		//		ImGui::SliderAngle("Rot X", &transform.rotate.x, -180.0f, 180.0f);
-		//		ImGui::SliderAngle("Rot Y", &transform.rotate.y, -180.0f, 180.0f);
-		//		ImGui::SliderAngle("Rot Z", &transform.rotate.z, -180.0f, 180.0f);
-		//
-		//		// ImGuiの内部コマンドを生成する
-		//		ImGui::Render();
-		//#endif // USE_IMGUI
+#ifdef USE_IMGUI
+
+		// 開発用UIの処理
+		imguiManager->Begin();
+
+#endif // USE_IMGUI
 
 
 		// カメラの更新
@@ -423,6 +406,14 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 		ParticleManager::GetInstance()->Update();
 		emitter->Update();
 
+#ifdef USE_IMGUI
+
+		// ImGuiの受け付け終了
+		imguiManager->End();
+
+#endif // USE_IMGUI
+
+
 		// 描画処理
 		// 描画前処理
 		dxBasis->PreDraw();
@@ -441,7 +432,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 
 		}
 
-		
+
 		// Spriteの描画
 		for (Sprite* sprite : sprites)
 		{
@@ -451,13 +442,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 		// パーティクルの描画
 		ParticleManager::GetInstance()->Draw();
 
-
 #ifdef USE_IMGUI
 
-		// ImGuiを描画
-		//ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxBasis->GetCommandList());
+		// ImGuiの描画
+		imguiManager->Draw();
 
-#endif
+#endif // USE_IMGUI
 
 		// 描画後処理
 		dxBasis->PostDraw();
@@ -465,15 +455,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 		TextureManager::GetInstance()->ReleaseIntermediateResources();
 
 	}
-
-#ifdef USE_IMGUI
-	// ImGui終了処理
-	/*ImGui_ImplDX12_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();*/
-#endif
-
-
 
 	// 解放処理
 	CloseHandle(fenceEvent);
@@ -484,6 +465,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	ModelManager::GetInstance()->Finalize();
 	// パーティクルマネージャーの終了
 	ParticleManager::GetInstance()->Finalize();
+	// ImGuiマネージャーの終了
+	imguiManager->Finalize();
 
 	delete input;
 	delete emitter;
@@ -501,6 +484,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 
 	delete object3dCommon;
 	delete camera;
+	delete imguiManager;
 	delete srvManager;
 	delete dxBasis;
 

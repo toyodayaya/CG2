@@ -1,4 +1,4 @@
-﻿#include "WinAPIManager.h"
+#include "WinAPIManager.h"
 #pragma comment(lib,"winmm.lib")
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
@@ -11,7 +11,6 @@ void WinAPIManager::Initialize()
 {
 	// COMの初期化
 	HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-
 
 	// ウインドウプロシージャ
 	wc.lpfnWndProc = WindowProc;

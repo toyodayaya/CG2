@@ -101,6 +101,10 @@ public:
 	// getter
 	ID3D12Device* GetDevice() const { return device.Get(); }
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
+	ID3D12CommandQueue* GetCommandQueue() const { return commandQueue.Get(); }
+
+	// スワップチェーンリソースの数を取得
+	size_t GetSwapChainResourceNum() const { return swapChainResources.size(); }
 
 	
 private:

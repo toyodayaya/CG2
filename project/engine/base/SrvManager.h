@@ -7,6 +7,9 @@
 class SrvManager
 {
 public:
+	// シングルトンインスタンス取得関数
+	static SrvManager* GetInstance();
+
 	// 初期化
 	void Initialize(DirectXBasis* dxBasis);
 
@@ -30,6 +33,9 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(uint32_t index);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(uint32_t index);
 
+	// ディスクリプタヒープ取得関数
+	ID3D12DescriptorHeap* GetDescriptorHeap() const { return descriptorHeap.Get(); }
+
 	// テクスチャ最大数チェック
 	bool CanAllocate() const;
 
@@ -37,6 +43,8 @@ public:
 	static const uint32_t kMaxSRVCount;
 
 private:
+	static SrvManager* instance;
+
 	DirectXBasis* dxBasis_ = nullptr;
 
 	// ディスクリプタサイズ
