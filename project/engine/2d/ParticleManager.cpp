@@ -315,7 +315,7 @@ void ParticleManager::Update()
 {
 #ifdef USE_IMGUI
 
-	ImGui::Begin("Particle Manager");
+	ImGui::Begin("Billboard");
 	ImGui::Checkbox("Billboard", &isBillboard);
 	ImGui::End();
 
@@ -323,12 +323,12 @@ void ParticleManager::Update()
 
 
 	// ビルボードの計算処理
-	Matrix4x4 backToFrontMatrix = MakeRotateYMatrix(std::numbers::pi_v<float>);
 	Matrix4x4 cameraMatrix = camera->GetWorldMatrix();
 	Matrix4x4 billboardMatrix = MakeIdentity4x4();
 
 	if (isBillboard)
 	{
+		Matrix4x4 backToFrontMatrix = MakeRotateYMatrix(std::numbers::pi_v<float>);
 		billboardMatrix = Multiply(backToFrontMatrix, cameraMatrix);
 		billboardMatrix.m[3][0] = 0.0f;
 		billboardMatrix.m[3][1] = 0.0f;
@@ -366,11 +366,21 @@ void ParticleManager::Update()
 			float alpha = 1.0f - (it->currentTime / it->lifeTime);
 
 			Matrix4x4 scaleMatrix = MakeScaleMatrix(it->transform.scale);
-			Matrix4x4 worldMatrix = Multiply(scaleMatrix, billboardMatrix);
 			Matrix4x4 translateMatrix = MakeTranslateMatrix(it->transform.translate);
-			worldMatrix = Multiply(worldMatrix, translateMatrix);
+			Matrix4x4 worldMatrix;
+
+			if (isBillboard)
+			{
+				worldMatrix = Multiply(scaleMatrix, billboardMatrix);
+				worldMatrix = Multiply(worldMatrix, translateMatrix);
+			}
+			else
+			{
+				worldMatrix = MakeAffineMatrix(it->transform.scale, it->transform.rotate, it->transform.translate);
+			}
+
 			Matrix4x4 viewProjectionMatrix = camera->GetViewProjectionMatrix();
-			Matrix4x4 wvp = Multiply(worldMatrix, viewProjectionMatrix);
+			Matrix4x4 wvp = Multiply(worldMatrix,viewProjectionMatrix);
 
 			// インスタンシング用データ1個分を書き込み
 			if (group.instanceCount < kMaxInstanceCount) {
@@ -382,6 +392,15 @@ void ParticleManager::Update()
 
 				group.instanceCount++;
 			}
+
+#ifdef USE_IMGUI
+
+			ImGui::Begin("Particle Manager");
+			ImGui::DragFloat3("Position", &it->transform.translate.x, 0.1f);
+			
+			ImGui::End();
+
+#endif
 
 			++it;
 

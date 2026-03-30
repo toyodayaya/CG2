@@ -243,9 +243,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 
 	// カメラの初期化
 	Camera* camera = new Camera();
-	/*camera->SetRotate({ std::numbers::pi_v<float> / 3.0f,std::numbers::pi_v<float> ,0.0f });
+	camera->SetRotate({ std::numbers::pi_v<float> / 3.0f,std::numbers::pi_v<float> ,0.0f });
 	camera->SetTranslate({ 0.0f,23.0f,10.0f });
-*/
+
 
 	// テクスチャマネージャーの初期化
 	TextureManager::GetInstance()->Initialize(dxBasis, srvManager);
@@ -336,7 +336,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 
 	// パーティクルエミッターの宣言
 	Transform translate;
-	translate.translate = { 0.0f,0.0f,1.0f };
+	translate.translate = { 0.0f,0.0f,0.0f };
 	translate.rotate = { 0.0f,0.0f,0.0f };
 	translate.scale = { 1.0f,1.0f,1.0f };
 	emitter = new ParticleEmitter("Particle", translate.translate, 0.5f, 2);
@@ -428,7 +428,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 		// 3dモデルの描画
 		for (Object3d* object3d : object3ds)
 		{
-			object3d->Draw();
+			//object3d->Draw();
 
 		}
 
@@ -436,7 +436,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 		// Spriteの描画
 		for (Sprite* sprite : sprites)
 		{
-			sprite->Draw();
+			//sprite->Draw();
 		}
 
 		// パーティクルの描画

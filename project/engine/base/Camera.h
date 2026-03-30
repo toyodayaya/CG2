@@ -22,6 +22,7 @@ public:
 	const Matrix4x4& GetViewProjectionMatrix() const { return viewProjectionMatrix; }
 	const Vector3& GetRotate() const { return transform.rotate; }
 	const Vector3& GetTranslate() const { return transform.translate; }
+	const Vector3& GetScale() const { return transform.scale; }
 
 	// デフォルトコンストラクタ
 	Camera();
