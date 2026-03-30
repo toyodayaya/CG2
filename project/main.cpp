@@ -8,8 +8,7 @@
 #include <MathManager.h>
 
 #include <wrl.h>
-#include <xaudio2.h>
-#pragma comment(lib,"xaudio2.lib")
+
 #include "Input.h"
 #include "DirectXBasis.h"
 #include <dxcapi.h>
@@ -38,42 +37,12 @@
 #include <numbers>
 #include "ParticleManager.h"
 #include "ParticleEmitter.h"
+#include "Audio.h"
 
 #pragma warning(pop)
 
 using namespace MathManager;
 using namespace Logger;
-
-// チャンクヘッダ
-struct ChunkHeader
-{
-	char id[4];
-	int32_t size;
-};
-
-// RIFFヘッダチャンク
-struct RiffHeader
-{
-	ChunkHeader chunk;
-	char type[4];
-};
-
-// FMTチャンク
-struct FormatChunk
-{
-	ChunkHeader chunk;
-	WAVEFORMATEX fmt;
-};
-
-struct SoundData
-{
-	// 波形フォーマット
-	WAVEFORMATEX wfex;
-	// バッファの先頭アドレス
-	BYTE* pBuffer;
-	// バッファのサイズ
-	unsigned int bufferSize;
-};
 
 // CrashHandlerの登録
 static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception)
@@ -98,115 +67,6 @@ static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception)
 	// 他に関連づけられているSEH例外ハンドラがあれば実行
 	return EXCEPTION_EXECUTE_HANDLER;
 }
-
-
-//
-//// 音声データ読み込み関数
-//SoundData SoundLoadWave(const char* filename)
-//{
-//	//HRESULT result;
-//
-//	// ファイルを開く
-//	std::ifstream file;
-//	file.open(filename, std::ios_base::binary);
-//	assert(file.is_open());
-//
-//	// wavデータ読み込み
-//	// RIFFヘッダー読み込み
-//	RiffHeader riff;
-//	file.read((char*)&riff, sizeof(riff));
-//
-//	// バイナリがRIFFと一致するかチェック
-//	if (strncmp(riff.chunk.id, "RIFF", 4) != 0)
-//	{
-//		assert(0);
-//	}
-//
-//	// WAVEかどうかチェック
-//	if (strncmp(riff.type, "WAVE", 4) != 0)
-//	{
-//		assert(0);
-//	}
-//
-//	// Formatチャンクの読み込み
-//	FormatChunk format = {};
-//	// チャンクヘッダーの確認
-//	file.read((char*)&format, sizeof(ChunkHeader));
-//	if (strncmp(format.chunk.id, "fmt ", 4) != 0)
-//	{
-//		assert(0);
-//	}
-//
-//	// チャンク本体の読み込み
-//	assert(format.chunk.size <= sizeof(format.fmt));
-//	file.read((char*)&format.fmt, format.chunk.size);
-//
-//	// Dataチャンクの読み込み
-//	ChunkHeader data;
-//	file.read((char*)&data, sizeof(data));
-//	// JUNKチャンクを検出したら
-//	if (strncmp(data.id, "JUNK", 4) == 0)
-//	{
-//		// 読み取り位置をJUNKチャンクの最後まで飛ばす
-//		file.seekg(data.size, std::ios_base::cur);
-//		// 再読み込み
-//		file.read((char*)&data, sizeof(data));
-//	}
-//
-//	if (strncmp(data.id, "data", 4) != 0)
-//	{
-//		assert(0);
-//	}
-//
-//	// Dataチャンクのデータ部の読み込み
-//	char* pBuffer = new char[data.size];
-//	file.read(pBuffer, data.size);
-//
-//	// ファイルを閉じる
-//	file.close();
-//
-//	// 読み込んだ音声データを返す
-//	// 返すための音声データ
-//	SoundData soundData = {};
-//	soundData.wfex = format.fmt;
-//	soundData.pBuffer = reinterpret_cast<BYTE*>(pBuffer);
-//	soundData.bufferSize = data.size;
-//
-//	return soundData;
-//}
-
-// 音声データの解放関数
-void SoundUnload(SoundData* soundData)
-{
-	// バッファのメモリを解放
-	delete[] soundData->pBuffer;
-	soundData->pBuffer = 0;
-	soundData->bufferSize = 0;
-	soundData->wfex = {};
-}
-
-// 音声データの再生関数
-void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData)
-{
-	HRESULT result;
-
-	// 波形フォーマットを基にSoundVoiceを生成
-	IXAudio2SourceVoice* pSourceVoice = nullptr;
-	result = xAudio2->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
-	assert(SUCCEEDED(result));
-
-	// 再生する波形データの設定
-	XAUDIO2_BUFFER buf{};
-	buf.pAudioData = soundData.pBuffer;
-	buf.AudioBytes = soundData.bufferSize;
-	buf.Flags = XAUDIO2_END_OF_STREAM;
-
-	// 波形データの再生
-	result = pSourceVoice->SubmitSourceBuffer(&buf);
-	result = pSourceVoice->Start();
-}
-
-
 
 // Windowsアプリでのエントリーポイント
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
@@ -266,17 +126,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	// 3Dモデルマネージャーの初期化
 	ModelManager::GetInstance()->Initialize(dxBasis);
 
-
-	//　音声データ用の変数宣言
-	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
-	IXAudio2MasteringVoice* masterVoice;
-	// xAudio2エンジンのインスタンスを生成
-	HRESULT soundResult;
-	soundResult = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
-	// マスターボイスを生成
-	soundResult = xAudio2->CreateMasteringVoice(&masterVoice);
+	// Audioの初期化
+	Audio* audio = new Audio();
+	audio->Initialize();
 	// 音声読み込み
-	//SoundData soundData1 = SoundLoadWave("resources/Alarm01.wav");
+	SoundData soundData1 = audio->SoundLoadFile("resources/fanfare.mp3");
 
 	// 入力クラスのポインタ
 	Input* input = nullptr;
@@ -328,11 +182,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	ParticleEmitter* emitter = nullptr;
 
 	// 音声再生
-	//SoundPlayWave(xAudio2.Get(), soundData1);
-
-	//particles.push_back(MakeNewParticle(randomEngine, emitter.transform.translate));
-	//particles.push_back(MakeNewParticle(randomEngine, emitter.transform.translate));
-	//particles.push_back(MakeNewParticle(randomEngine, emitter.transform.translate));
+	audio->SoundPlayWave(audio->GetXAudio2().Get(), soundData1);
 
 	// パーティクルエミッターの宣言
 	Transform translate;
@@ -469,6 +319,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	imguiManager->Finalize();
 
 	delete input;
+
+	// 音声データ解放
+	audio->Finalize();
+	audio->SoundUnload(&soundData1);
+	delete audio;
+
 	delete emitter;
 
 	for (Sprite* sprite : sprites)
@@ -488,11 +344,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 	delete srvManager;
 	delete dxBasis;
 
-	// xAudio2解放
-	xAudio2.Reset();
-	// 音声データ解放
-	//SoundUnload(&soundData1);
-
+	
 	// WinAPIの終了処理
 	winAPIManager->Finalize();
 
