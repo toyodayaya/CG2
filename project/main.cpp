@@ -243,9 +243,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 
 	// カメラの初期化
 	Camera* camera = new Camera();
-	camera->SetRotate({ std::numbers::pi_v<float> / 3.0f,std::numbers::pi_v<float> ,0.0f });
+	/*camera->SetRotate({ std::numbers::pi_v<float> / 3.0f,std::numbers::pi_v<float> ,0.0f });
 	camera->SetTranslate({ 0.0f,23.0f,10.0f });
-
+*/
 
 	// テクスチャマネージャーの初期化
 	TextureManager::GetInstance()->Initialize(dxBasis, srvManager);

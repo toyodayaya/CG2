@@ -5,6 +5,7 @@
 #include <cassert>
 #include "MathManager.h"
 #include "TextureManager.h"
+#include "ImguiManager.h"
 
 using namespace Logger;
 using namespace MathManager;
@@ -312,15 +313,27 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
 
 void ParticleManager::Update()
 {
+#ifdef USE_IMGUI
+
+	ImGui::Begin("Particle Manager");
+	ImGui::Checkbox("Billboard", &isBillboard);
+	ImGui::End();
+
+#endif
+
+
 	// ビルボードの計算処理
 	Matrix4x4 backToFrontMatrix = MakeRotateYMatrix(std::numbers::pi_v<float>);
 	Matrix4x4 cameraMatrix = camera->GetWorldMatrix();
 	Matrix4x4 billboardMatrix = MakeIdentity4x4();
-	billboardMatrix = Multiply(backToFrontMatrix, cameraMatrix);
-	billboardMatrix.m[3][0] = 0.0f;
-	billboardMatrix.m[3][1] = 0.0f;
-	billboardMatrix.m[3][2] = 0.0f;
 
+	if (isBillboard)
+	{
+		billboardMatrix = Multiply(backToFrontMatrix, cameraMatrix);
+		billboardMatrix.m[3][0] = 0.0f;
+		billboardMatrix.m[3][1] = 0.0f;
+		billboardMatrix.m[3][2] = 0.0f;
+	}
 
 	// 全てのパーティクルグループ
 	for (auto& [name, group] : particleGroups)
