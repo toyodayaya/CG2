@@ -6,16 +6,18 @@
 #include <vector>
 #include <string>
 
-struct SoundData
-{
-	// 波形フォーマット
-	WAVEFORMATEX wfex;
-	// バッファ
-	std::vector<BYTE> buffer;
-};
-
 class Audio
 {
+
+public:
+	struct SoundData
+	{
+		// 波形フォーマット
+		WAVEFORMATEX wfex;
+		// バッファ
+		std::vector<BYTE> buffer;
+	};
+
 private:
 	// チャンクヘッダ
 	struct ChunkHeader
@@ -64,6 +66,6 @@ private:
 	//　音声データ用の変数宣言
 	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
 	IXAudio2MasteringVoice* masterVoice;
-	
+
 };
 

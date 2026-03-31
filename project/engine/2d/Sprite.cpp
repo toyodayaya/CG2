@@ -3,11 +3,11 @@
 #include "TextureManager.h"
 using namespace MathManager;
 
-void Sprite::Initialize(SpriteCommon* spriteManager, std::string textureFilePath)
+void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 {
 	// 引数で受け取ってメンバ変数に記録する
-	this->spriteManager_ = spriteManager;
-	dxBasis_ = spriteManager->GetDxBasis();
+	this->spriteManager_ = spriteCommon;
+	dxBasis_ = spriteCommon->GetDxBasis();
 	filePath = textureFilePath;
 
 	// 頂点データ作成

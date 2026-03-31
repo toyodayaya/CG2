@@ -29,7 +29,7 @@ void Audio::Initialize()
 	result = xAudio2->CreateMasteringVoice(&masterVoice);
 }
 
-SoundData Audio::SoundLoadFile(const std::string& filename)
+Audio::SoundData Audio::SoundLoadFile(const std::string& filename)
 {
 	// フルパスをワイド文字列に変換
 	std::wstring filePathW = StringUtility::ConvertString(filename);
