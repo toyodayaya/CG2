@@ -2,6 +2,18 @@
 #include "Logger.h"
 using namespace Logger;
 
+Object3dCommon* Object3dCommon::instance = nullptr;
+
+Object3dCommon* Object3dCommon::GetInstance()
+{
+	if (instance == nullptr)
+	{
+		instance = new Object3dCommon;
+	}
+
+	return instance;
+}
+
 void Object3dCommon::Initialize(DirectXBasis* directXBasis)
 {
 	// 引数で受け取ってメンバ変数として記録する
@@ -174,4 +186,10 @@ void Object3dCommon::DrawSettingCommon()
 
 	// 形状を設定
 	dxBasis_->GetCommandList()->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+void Object3dCommon::Finalize()
+{
+	delete instance;
+	instance = nullptr;
 }

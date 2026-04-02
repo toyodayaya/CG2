@@ -1,4 +1,5 @@
 #pragma once
+
 #include "WinAPIManager.h"
 #include <dbghelp.h>
 #pragma comment(lib, "Dbghelp.lib")
@@ -20,6 +21,8 @@
 #endif // USE_IMGUI
 
 #include "ImguiManager.h"
+
+#include "AbstractSceneFactory.h"
 
 #include "D3DResourceLeakChecker.h"
 #include "SpriteCommon.h"
@@ -66,19 +69,14 @@ protected:
 	ImguiManager* imguiManager = nullptr;
 	// カメラのポインタ
 	Camera* camera = nullptr;
-	// スプライト共通部のポインタ
-	SpriteCommon* spriteCommon = nullptr;
-	// 3dオブジェクト共通部のポインタ
-	Object3dCommon* object3dCommon = nullptr;
-	// オーディオのポインタ
-	Audio* audio = nullptr;
-	// 入力クラスのポインタ
-	Input* input = nullptr;
-
+	
 	// Fenceのsignalを待つためのイベント
 	HANDLE fenceEvent = nullptr;
 
 	// 終了リクエストフラグ
 	bool isEndRequest = false;
+
+	// シーンファクトリー
+	AbstractSceneFactory* sceneFactory = nullptr;
 };
 

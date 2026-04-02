@@ -16,6 +16,18 @@
 #include "Audio.h"
 #include "StringUtility.h"
 
+Audio* Audio::instance = nullptr;
+
+Audio* Audio::GetInstance()
+{
+	if (instance == nullptr)
+	{
+		instance = new Audio;
+	}
+
+	return instance;
+}
+
 void Audio::Initialize()
 {
 	// MF全体の初期化
@@ -119,9 +131,24 @@ void Audio::SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData)
 	buf.AudioBytes = (UINT32)soundData.buffer.size();
 	buf.Flags = XAUDIO2_END_OF_STREAM;
 
+	// 管理リストに追加
+	activeVoices.insert(pSourceVoice);
+
 	// 波形データの再生
 	result = pSourceVoice->SubmitSourceBuffer(&buf);
 	result = pSourceVoice->Start();
+}
+
+void Audio::SoundStopWave(IXAudio2* xAudio2, const SoundData& soundData)
+{
+	// 管理リストから削除
+	for (auto voice : activeVoices)
+	{
+		voice->Stop();
+		voice->FlushSourceBuffers();
+		voice->DestroyVoice();
+	}
+	activeVoices.clear();
 }
 
 void Audio::Finalize()
@@ -132,5 +159,8 @@ void Audio::Finalize()
 	// MF全体の終了
 	HRESULT result = MFShutdown();
 	assert(SUCCEEDED(result));
+
+	delete instance;
+	instance = nullptr;
 
 }

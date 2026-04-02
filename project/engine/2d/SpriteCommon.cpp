@@ -1,6 +1,18 @@
 #include "SpriteCommon.h"
 #include "Logger.h"
 
+SpriteCommon* SpriteCommon::instance = nullptr;
+
+SpriteCommon* SpriteCommon::GetInstance()
+{
+	if (instance == nullptr)
+	{
+		instance = new SpriteCommon;
+	}
+
+	return instance;
+}
+
 void SpriteCommon::Initialize(DirectXBasis* directXBasis)
 {
 	// 引数で受け取ってメンバ変数として記録する
@@ -175,4 +187,10 @@ void SpriteCommon::DrawSettingCommon()
 
 	// 形状を設定
 	dxBasis_->GetCommandList()->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+void SpriteCommon::Finalize()
+{
+	delete instance;
+	instance = nullptr;
 }

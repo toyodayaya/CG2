@@ -1,8 +1,19 @@
-﻿#include "Input.h"
+#include "Input.h"
 
 #pragma comment(lib,"dinput8.lib")
 #pragma comment(lib,"dxguid.lib")
 #include <cassert>
+
+Input* Input::instance = nullptr;
+
+Input* Input::GetInstance()
+{
+	if (instance == nullptr)
+	{
+		instance = new Input;
+	}
+	return instance;
+}
 
 void Input::Initialize(WinAPIManager* winApiManager)
 {
@@ -59,4 +70,10 @@ bool Input::TriggerKey(BYTE keyNumber)
 
 	// そうでなければfalseを返す
 	return false;
+}
+
+void Input::Finalize()
+{
+	delete instance;
+	instance = nullptr;
 }

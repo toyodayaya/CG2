@@ -5,10 +5,11 @@
 #include <wrl.h>
 #include <vector>
 #include <string>
+#include <set>
 
-class Audio
+class Audio final
 {
-
+	
 public:
 	struct SoundData
 	{
@@ -58,14 +59,33 @@ public:
 	// 音声データの再生関数
 	void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData);
 
+	// 音声データの停止関数
+	void SoundStopWave(IXAudio2* xAudio2, const SoundData& soundData);
+
 	// getter
 	Microsoft::WRL::ComPtr<IXAudio2> GetXAudio2() const { return xAudio2; }
+
+	// コンストラクタ
+	Audio() = default;
+	// デストラクタ
+	~Audio() = default;
+	// コピーコンストラクタを無効化
+	Audio(const Audio&) = delete;
+	// コピー代入演算子を無効化
+	Audio& operator=(const Audio&) = delete;
+
+	// インスタンス
+	static Audio* GetInstance();
 
 private:
 	
 	//　音声データ用の変数宣言
 	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
 	IXAudio2MasteringVoice* masterVoice;
+	std::set<IXAudio2SourceVoice*> activeVoices;
+
+	// シングルトンインスタンス
+	static Audio* instance;
 
 };
 

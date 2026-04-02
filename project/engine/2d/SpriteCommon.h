@@ -1,8 +1,19 @@
-﻿#pragma once
+#pragma once
 #include "DirectXBasis.h"
 
 class SpriteCommon
 {
+private:
+	// コンストラクタ
+	SpriteCommon() = default;
+	// デストラクタ
+	~SpriteCommon() = default;
+	// コピーコンストラクタとコピー代入演算子を削除
+	SpriteCommon(const SpriteCommon&) = delete;
+	SpriteCommon& operator=(const SpriteCommon&) = delete;
+	// インスタンス
+	static SpriteCommon* instance;
+
 public:
 	// 初期化
 	void Initialize(DirectXBasis* directXBasis);
@@ -14,6 +25,11 @@ public:
 	void DrawSettingCommon();
 	// getter
 	DirectXBasis* GetDxBasis() const { return dxBasis_; }
+
+	// インスタンス
+	static SpriteCommon* GetInstance();
+	// 終了
+	void Finalize();
 	
 private:
 	// ポインタ

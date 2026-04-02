@@ -1,4 +1,6 @@
 #include "Game.h"
+#include "BaseScene.h"
+#include "SceneFactory.h"
 
 void Game::Initialize()
 {
@@ -8,49 +10,11 @@ void Game::Initialize()
 	camera->SetRotate({ std::numbers::pi_v<float> / 3.0f,std::numbers::pi_v<float> ,0.0f });
 	camera->SetTranslate({ 0.0f,23.0f,10.0f });
 
-	// 音声読み込み
-	soundData1 = audio->SoundLoadFile("resources/fanfare.mp3");
-
-	// スプライトの初期化
-	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
-	TextureManager::GetInstance()->LoadTexture("resources/circle.png");
-	for (uint32_t i = 0; i < 5; ++i)
-	{
-		Sprite* sprite = new Sprite();
-		sprite->Initialize(spriteCommon, "resources/uvChecker.png");
-		sprites.push_back(sprite);
-	}
-
-	// objファイルからモデルを読み込む
-	ModelManager::GetInstance()->LoadModel("plane.obj");
-	ModelManager::GetInstance()->LoadModel("axis.obj");
-
-	// 3Dオブジェクトの初期化
-	for (uint32_t i = 0; i < 2; ++i)
-	{
-		Object3d* object3d = new Object3d();
-		object3d->Initialize(object3dCommon);
-		object3d->SetModel("plane.obj");
-		Vector3 pos = object3d->GetTranslate();
-		pos.x += (1.0f * (i + 1));
-		object3d->SetTranslate(pos);
-		object3ds.push_back(object3d);
-	}
-
-	object3ds[1]->SetModel("axis.obj");
-
-	// パーティクルグループの作成
-	ParticleManager::GetInstance()->CreateParticleGroup("Particle", "resources/circle.png");
-
-	// パーティクルエミッターの宣言
-	Transform translate;
-	translate.translate = { 0.0f,0.0f,0.0f };
-	translate.rotate = { 0.0f,0.0f,0.0f };
-	translate.scale = { 1.0f,1.0f,1.0f };
-	emitter = new ParticleEmitter("Particle", translate.translate, 0.5f, 2);
-
-	// 音声再生
-	audio->SoundPlayWave(audio->GetXAudio2().Get(), soundData1);
+	// シーンファクトリーの生成とセット
+	SceneFactory* sceneFactory = new SceneFactory;
+	SceneManager::GetInstance()->SetSceneFactory(sceneFactory);
+	// シーンマネージャーに最初のシーンをセット
+	SceneManager::GetInstance()->ChangeScene("TitleScene");
 }
 
 void Game::Update()
@@ -59,21 +23,8 @@ void Game::Update()
 	// 汎用部の更新処理
 	Framework::Update();
 
-	// 3Dモデルの更新処理
-	for (Object3d* object3d : object3ds)
-	{
-		object3d->Update();
-
-	}
-
-	// スプライトの更新処理
-	for (Sprite* sprite : sprites)
-	{
-		sprite->Update();
-	}
-
-	// パーティクルの更新処理
-	emitter->Update();
+	// シーンの更新
+	SceneManager::GetInstance()->Update();
 
 }
 
@@ -85,27 +36,14 @@ void Game::Draw()
 	srvManager->PreDraw();
 
 	// 3dモデルの描画準備
-	object3dCommon->DrawSettingCommon();
+	Object3dCommon::GetInstance()->DrawSettingCommon();
 
 	// Spriteの描画準備
-	spriteCommon->DrawSettingCommon();
+	SpriteCommon::GetInstance()->DrawSettingCommon();
 
-	// 3dモデルの描画
-	for (Object3d* object3d : object3ds)
-	{
-		object3d->Draw();
-
-	}
-
-
-	// Spriteの描画
-	for (Sprite* sprite : sprites)
-	{
-		sprite->Draw();
-	}
-
-	// パーティクルの描画
-	ParticleManager::GetInstance()->Draw();
+	// シーンの描画
+	SceneManager::GetInstance()->Draw();
+	
 
 #ifdef USE_IMGUI
 
@@ -122,20 +60,11 @@ void Game::Draw()
 
 void Game::Finalize()
 {
-	
-	audio->SoundUnload(&soundData1);
-	
-	delete emitter;
+	// シーンマネージャーの終了処理
+	SceneManager::GetInstance()->Finalize();
 
-	for (Sprite* sprite : sprites)
-	{
-		delete sprite;
-	}
-
-	for (Object3d* object3d : object3ds)
-	{
-		delete object3d;
-	}
+	// シーンファクトリーの終了処理
+	delete sceneFactory;
 
 	// 汎用部の終了処理
 	Framework::Finalize();

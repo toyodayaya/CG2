@@ -30,24 +30,20 @@ void Framework::Initialize()
 	TextureManager::GetInstance()->Initialize(dxBasis, srvManager);
 
 	// スプライト共通部の初期化
-	spriteCommon = new SpriteCommon();
-	spriteCommon->Initialize(dxBasis);
+	SpriteCommon::GetInstance()->Initialize(dxBasis);
 
 	// 3dオブジェクト共通部の初期化
-	object3dCommon = new Object3dCommon();
-	object3dCommon->Initialize(dxBasis);
-	object3dCommon->SetDefaultCamera(camera);
+	Object3dCommon::GetInstance()->Initialize(dxBasis);
+	Object3dCommon::GetInstance()->SetDefaultCamera(camera);
 
 	// 3Dモデルマネージャーの初期化
 	ModelManager::GetInstance()->Initialize(dxBasis);
 
 	// Audioの初期化
-	audio = new Audio();
-	audio->Initialize();
+	Audio::GetInstance()->Initialize();
 
 	// 入力の初期化
-	input = new Input();
-	input->Initialize(winAPIManager);
+	Input::GetInstance()->Initialize(winAPIManager);
 
 	// Fenceのsignalを待つためのイベントを作成する
 	fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -68,10 +64,10 @@ void Framework::Update()
 	}
 
 	// 入力の更新処理
-	input->Update();
+	Input::GetInstance()->Update();
 
 	// 数字の0キーが押されていたら
-	if (input->TriggerKey(DIK_0))
+	if (Input::GetInstance()->TriggerKey(DIK_0))
 	{
 		OutputDebugStringA("Hit 0\n");
 	}
@@ -104,16 +100,20 @@ void Framework::Finalize()
 	CloseHandle(fenceEvent);
 	// パーティクルマネージャーの終了
 	ParticleManager::GetInstance()->Finalize();
-	delete input;
+	// 入力クラスの終了
+	Input::GetInstance()->Finalize();
 	// 音声データ解放
-	audio->Finalize();
-	delete audio;
+	Audio::GetInstance()->Finalize();
+	
 	// 3Dモデルマネージャーの終了
 	ModelManager::GetInstance()->Finalize();
-	delete object3dCommon;
-	delete spriteCommon;
+	// 3dオブジェクト共通部の終了
+	Object3dCommon::GetInstance()->Finalize();
+	// スプライト共通部の終了
+	SpriteCommon::GetInstance()->Finalize();
 	// テクスチャマネージャーの終了
 	TextureManager::GetInstance()->Finalize();
+	// カメラの終了
 	delete camera;
 	// ImGuiマネージャーの終了
 	imguiManager->Finalize();

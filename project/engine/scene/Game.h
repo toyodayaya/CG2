@@ -2,13 +2,8 @@
 #pragma warning(push)
 // C4023の警告を見なかったことにする
 #pragma warning(disable:4023)
-#include "Sprite.h"
-#include "Object3d.h"
-#include "Model.h"
-#include <numbers>
-#include "ParticleEmitter.h"
 #include "Framework.h"
-
+#include "SceneManager.h"
 #pragma warning(pop)
 
 using namespace MathManager;
@@ -28,19 +23,5 @@ public:
 
 	
 private:
-	
-	// サウンドデータ
-	Audio::SoundData soundData1;
-
-	// スプライト
-	std::vector<Sprite*> sprites;
-	// スプライト切り替えフラグ
-	bool useMonsterBall = true;
-
-	// 3dオブジェクト
-	std::vector<Object3d*> object3ds;
-
-	// パーティクルエミッターのポインタ
-	ParticleEmitter* emitter = nullptr;
 };
 
