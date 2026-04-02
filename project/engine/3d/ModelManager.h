@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <string>
 #include <vector>
 #include <map>
@@ -21,7 +21,7 @@ private:
 	std::map<std::string, std::unique_ptr<Model>> models;
 
 	// モデル共通部のポインタ
-	ModelCommon* modelCommon = nullptr;
+	std::unique_ptr <ModelCommon> modelCommon;
 
 public:
 	// シングルトンインスタンスの取得

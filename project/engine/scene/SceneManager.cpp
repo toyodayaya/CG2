@@ -32,11 +32,11 @@ void SceneManager::Update()
 		if (scene_)
 		{
 			scene_->Finalize();
-			delete scene_;
+			scene_.reset();
 		}
 
 		// シーンを切り替える
-		scene_ = nextScene_;
+		scene_.reset(nextScene_);
 		nextScene_ = nullptr;
 
 		// 次シーンを初期化する
@@ -58,7 +58,7 @@ void SceneManager::Finalize()
 {
 	// 最後のシーンの終了と解放
 	scene_->Finalize();
-	delete scene_;
+	scene_.reset();
 	delete instance;
 	instance = nullptr;
 }

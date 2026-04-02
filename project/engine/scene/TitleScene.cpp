@@ -14,9 +14,9 @@ void TitleScene::Initialize()
 	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 	for (uint32_t i = 0; i < 5; ++i)
 	{
-		Sprite* sprite = new Sprite();
+		std::unique_ptr<Sprite> sprite = std::make_unique<Sprite>();
 		sprite->Initialize(SpriteCommon::GetInstance(), "resources/uvChecker.png");
-		sprites.push_back(sprite);
+		sprites.push_back(std::move(sprite));
 	}
 
 	// objファイルからモデルを読み込む
@@ -26,13 +26,13 @@ void TitleScene::Initialize()
 	// 3Dオブジェクトの初期化
 	for (uint32_t i = 0; i < 2; ++i)
 	{
-		Object3d* object3d = new Object3d();
+		std::unique_ptr<Object3d> object3d = std::make_unique<Object3d>();
 		object3d->Initialize(Object3dCommon::GetInstance());
 		object3d->SetModel("plane.obj");
 		Vector3 pos = object3d->GetTranslate();
 		pos.x += (1.0f * (i + 1));
 		object3d->SetTranslate(pos);
-		object3ds.push_back(object3d);
+		object3ds.push_back(std::move(object3d));
 	}
 
 	object3ds[1]->SetModel("axis.obj");
@@ -46,16 +46,6 @@ void TitleScene::Finalize()
 {
 	Audio::GetInstance()->SoundStopWave(Audio::GetInstance()->GetXAudio2().Get(), soundData1);
 	Audio::GetInstance()->SoundUnload(&soundData1);
-
-	for (Sprite* sprite : sprites)
-	{
-		delete sprite;
-	}
-
-	for (Object3d* object3d : object3ds)
-	{
-		delete object3d;
-	}
 }
 
 void TitleScene::Update()
@@ -67,25 +57,25 @@ void TitleScene::Update()
 	}
 
 	// 3Dモデルの更新処理
-	for (Object3d* object3d : object3ds)
+	for (const std::unique_ptr<Object3d>& object3d : object3ds)
 	{
 		object3d->Update();
 
 	}
 
 	// スプライトの更新処理
-	for (Sprite* sprite : sprites)
+	for (const std::unique_ptr <Sprite>& sprite : sprites)
 	{
 		sprite->Update();
 	}
-
 
 }
 
 void TitleScene::Draw()
 {
+
 	// 3dモデルの描画
-	for (Object3d* object3d : object3ds)
+	for (const std::unique_ptr <Object3d>& object3d : object3ds)
 	{
 		object3d->Draw();
 
@@ -93,8 +83,10 @@ void TitleScene::Draw()
 
 
 	// Spriteの描画
-	for (Sprite* sprite : sprites)
+	for (const std::unique_ptr <Sprite>& sprite : sprites)
 	{
 		sprite->Draw();
 	}
+
+
 }

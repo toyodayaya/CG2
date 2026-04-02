@@ -7,6 +7,7 @@
 #include <MathManager.h>
 
 #include <wrl.h>
+#include <memory>
 
 #include "Input.h"
 #include "DirectXBasis.h"
@@ -60,13 +61,13 @@ protected:
 	// リークチェック用のインスタンス
 	D3DResourceLeakChecker leakCheck;
 	// WinAPIのポインタ
-	WinAPIManager* winAPIManager = nullptr;
+	std::unique_ptr<WinAPIManager> winAPIManager;
 	// DirectX基盤のポインタ
-	DirectXBasis* dxBasis = nullptr;
+	std::unique_ptr <DirectXBasis> dxBasis;
 	// SRVマネージャーのポインタ
-	SrvManager* srvManager = nullptr;
+	std::unique_ptr <SrvManager> srvManager;
 	// ImGuiマネージャーのポインタ
-	ImguiManager* imguiManager = nullptr;
+	std::unique_ptr <ImguiManager> imguiManager;
 	// カメラのポインタ
 	Camera* camera = nullptr;
 	

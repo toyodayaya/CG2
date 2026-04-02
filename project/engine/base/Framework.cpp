@@ -8,49 +8,49 @@ void Framework::Initialize()
 	SetUnhandledExceptionFilter(ExportDump);
 
 	// WinAPIの初期化
-	winAPIManager = new WinAPIManager();
+	winAPIManager = std::make_unique<WinAPIManager>();
 	winAPIManager->Initialize();
 
 	// DirectX基盤の初期化
-	dxBasis = new DirectXBasis();
-	dxBasis->Initialize(winAPIManager);
+	dxBasis = std::make_unique <DirectXBasis>();
+	dxBasis->Initialize(winAPIManager.get());
 
 	// SRVマネージャーの初期化
-	srvManager = new SrvManager();
-	srvManager->Initialize(dxBasis);
+	srvManager = std::make_unique <SrvManager>();
+	srvManager->Initialize(dxBasis.get());
 
 	// Imguiマネージャーの初期化
-	imguiManager = new ImguiManager();
-	imguiManager->Initialize(winAPIManager, dxBasis, srvManager);
+	imguiManager = std::make_unique <ImguiManager>();
+	imguiManager->Initialize(winAPIManager.get(), dxBasis.get(), srvManager.get());
 
 	// カメラの初期化
 	camera = new Camera();
 
 	// テクスチャマネージャーの初期化
-	TextureManager::GetInstance()->Initialize(dxBasis, srvManager);
+	TextureManager::GetInstance()->Initialize(dxBasis.get(), srvManager.get());
 
 	// スプライト共通部の初期化
-	SpriteCommon::GetInstance()->Initialize(dxBasis);
+	SpriteCommon::GetInstance()->Initialize(dxBasis.get());
 
 	// 3dオブジェクト共通部の初期化
-	Object3dCommon::GetInstance()->Initialize(dxBasis);
+	Object3dCommon::GetInstance()->Initialize(dxBasis.get());
 	Object3dCommon::GetInstance()->SetDefaultCamera(camera);
 
 	// 3Dモデルマネージャーの初期化
-	ModelManager::GetInstance()->Initialize(dxBasis);
+	ModelManager::GetInstance()->Initialize(dxBasis.get());
 
 	// Audioの初期化
 	Audio::GetInstance()->Initialize();
 
 	// 入力の初期化
-	Input::GetInstance()->Initialize(winAPIManager);
+	Input::GetInstance()->Initialize(winAPIManager.get());
 
 	// Fenceのsignalを待つためのイベントを作成する
 	fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	assert(fenceEvent != nullptr);
 
 	// パーティクルマネージャーの初期化
-	ParticleManager::GetInstance()->Initialize(dxBasis, srvManager, camera);
+	ParticleManager::GetInstance()->Initialize(dxBasis.get(), srvManager.get(), camera);
 	
 }
 
@@ -117,16 +117,10 @@ void Framework::Finalize()
 	delete camera;
 	// ImGuiマネージャーの終了
 	imguiManager->Finalize();
-	delete imguiManager;
-	delete srvManager;
-	delete dxBasis;
-
 
 	// WinAPIの終了処理
 	winAPIManager->Finalize();
 
-	// WinAPIの解放処理
-	delete winAPIManager;
 }
 
 void Framework::Run()

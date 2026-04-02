@@ -5,6 +5,7 @@
 #include "ParticleEmitter.h"
 #include <numbers>
 #include "BaseScene.h"
+#include <memory>
 
 class GamePlayScene : public BaseScene
 {
@@ -23,15 +24,15 @@ private:
 	Audio::SoundData soundData1;
 
 	// スプライト
-	std::vector<Sprite*> sprites;
+	std::vector<std::unique_ptr<Sprite>> sprites;
 	// スプライト切り替えフラグ
 	bool useMonsterBall = true;
 
 	// 3dオブジェクト
-	std::vector<Object3d*> object3ds;
+	std::vector< std::unique_ptr<Object3d>> object3ds;
 
 	// パーティクルエミッターのポインタ
-	ParticleEmitter* emitter = nullptr;
+	std::unique_ptr <ParticleEmitter> emitter;
 
 };
 
