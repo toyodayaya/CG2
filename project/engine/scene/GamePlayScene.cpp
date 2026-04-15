@@ -23,23 +23,21 @@ void GamePlayScene::Initialize()
 	// objファイルからモデルを読み込む
 	ModelManager::GetInstance()->LoadModel("plane.obj");
 	ModelManager::GetInstance()->LoadModel("axis.obj");
+	ModelManager::GetInstance()->LoadModel("fence.obj");
 
 	// 3Dオブジェクトの初期化
-	for (uint32_t i = 0; i < 2; ++i)
+	for (uint32_t i = 0; i < 1; ++i)
 	{
 		std::unique_ptr<Object3d> object3d = std::make_unique<Object3d>();
 		object3d->Initialize(Object3dCommon::GetInstance());
-		object3d->SetModel("plane.obj");
+		object3d->SetModel("fence.obj");
 		Vector3 pos = object3d->GetTranslate();
 		pos.x += (1.0f * (i + 1));
 		object3d->SetTranslate(pos);
 		object3ds.push_back(std::move(object3d));
 	}
 
-	object3ds[1]->SetModel("axis.obj");
-
-
-
+	
 	// パーティクルグループの作成
 	ParticleManager::GetInstance()->CreateParticleGroup("Particle", "resources/circle.png");
 

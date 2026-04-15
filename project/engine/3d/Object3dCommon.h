@@ -2,23 +2,6 @@
 #include "DirectXBasis.h"
 #include "Camera.h"
 
-enum BlendMode
-{
-	// ブレンドなし
-	kBlendModeNone,
-	// 通常ブレンド
-	kBlendModeNormal,
-	// 加算
-	kBlendModeAdd,
-	// 減算
-	kBlendModeSubstract,
-	// 乗算
-	kBlendModeMultiply,
-	// スクリーン
-	kBlendModeScreen,
-	// 利用禁止
-	kCountOfBlendMode
-};
 
 class Object3dCommon
 {
@@ -32,6 +15,24 @@ private:
 	Object3dCommon& operator=(const Object3dCommon&) = delete;
 	// インスタンス
 	static Object3dCommon* instance;
+
+	enum BlendMode
+	{
+		// ブレンドなし
+		kBlendModeNone,
+		// 通常ブレンド
+		kBlendModeNormal,
+		// 加算
+		kBlendModeAdd,
+		// 減算
+		kBlendModeSubstract,
+		// 乗算
+		kBlendModeMultiply,
+		// スクリーン
+		kBlendModeScreen,
+		// 利用禁止
+		kCountOfBlendMode
+	};
 
 public:
 	// 初期化
@@ -55,8 +56,7 @@ public:
 	// 終了
 	void Finalize();
 
-	// ブレンドモード
-	BlendMode blendMode_ = kBlendModeSubstract;
+	
 
 private:
 	// ポインタ
@@ -76,8 +76,9 @@ private:
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = { };
 	// RasterizerStateの設定
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
+	// ブレンドモード
+	BlendMode blendMode_ = kBlendModeNone;
 
-	
 	// デフォルトカメラ
 	Camera* defaultCamera_ = nullptr;
 

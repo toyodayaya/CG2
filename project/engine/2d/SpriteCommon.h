@@ -14,6 +14,24 @@ private:
 	// インスタンス
 	static SpriteCommon* instance;
 
+	enum BlendMode
+	{
+		// ブレンドなし
+		kBlendModeNone,
+		// 通常ブレンド
+		kBlendModeNormal,
+		// 加算
+		kBlendModeAdd,
+		// 減算
+		kBlendModeSubstract,
+		// 乗算
+		kBlendModeMultiply,
+		// スクリーン
+		kBlendModeScreen,
+		// 利用禁止
+		kCountOfBlendMode
+	};
+
 public:
 	// 初期化
 	void Initialize(DirectXBasis* directXBasis);
@@ -23,6 +41,8 @@ public:
 	void GenerateGraphicsPipeline();
 	// 共通描画設定
 	void DrawSettingCommon();
+	// ブレンドモード設定
+	void BlendModeSetting();
 	// getter
 	DirectXBasis* GetDxBasis() const { return dxBasis_; }
 
@@ -38,5 +58,9 @@ private:
 	Microsoft::WRL::ComPtr <ID3D12RootSignature> rootSignature;
 	// グラフィックスパイプラインステート
 	Microsoft::WRL::ComPtr <ID3D12PipelineState> graphicPipelineState;
+	// BlendStateの設定
+	D3D12_BLEND_DESC blendDesc{};
+	// ブレンドモード
+	BlendMode blendMode_ = kBlendModeScreen;
 };
 

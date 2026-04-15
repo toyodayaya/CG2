@@ -83,13 +83,6 @@ void Object3d::Update()
 	transformationData->WVP = worldViewProjectionMatrix;
 	transformationData->World = worldMatrix;
 
-#ifdef USE_IMGUI
-	ImGui::Begin("Lighting");
-	ImGui::DragFloat("intencity", &directionalLightData->intensity);
-	ImGui::DragFloat4("color", &directionalLightData->color.x);
-	ImGui::End();
-	
-#endif // USE_IMGUI
 }
 
 void Object3d::Draw()

@@ -1,6 +1,7 @@
 #include "Sprite.h"
 #include "SpriteCommon.h"
 #include "TextureManager.h"
+#include "ImGuiManager.h"
 using namespace MathManager;
 
 void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
@@ -85,6 +86,13 @@ void Sprite::CreateTransformMatrixData()
 
 void Sprite::Update()
 {
+#ifdef USE_IMGUI
+	ImGui::Begin("Lighting");
+	ImGui::ColorEdit4("color", &materialData->color.x);
+	ImGui::End();
+
+#endif // USE_IMGUI
+
 	
 	indexData[0] = 0;
 	indexData[1] = 1;
