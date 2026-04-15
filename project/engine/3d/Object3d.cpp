@@ -1,14 +1,8 @@
 #include "Object3d.h" 
 #include "Object3dCommon.h"
 #include "MathManager.h"
-#include "TextureManager.h"
 #include "ModelManager.h"
-#include <fstream>
-#include <sstream>
-#include <cassert>
-#include <externals/imgui/imgui.h>
-#include <externals/imgui/imgui_impl_dx12.h>
-#include <externals/imgui/imgui_impl_win32.h>
+#include "ImGuiManager.h"
 
 using namespace MathManager;
 
@@ -90,25 +84,11 @@ void Object3d::Update()
 	transformationData->World = worldMatrix;
 
 #ifdef USE_IMGUI
-	//// 開発用UIの処理
-	//ImGui::ShowDemoWindow();
-
-	//ImGui::Separator();
-	//ImGui::Text("Camera");
-	//ImGui::DragFloat3("Camera Pos", &cameraTransform.translate.x, 0.1f);
-	//ImGui::SliderAngle("Camera Rot X", &cameraTransform.rotate.x);
-	//ImGui::SliderAngle("Camera Rot Y", &cameraTransform.rotate.y);
-	//ImGui::SliderAngle("Camera Rot Z", &cameraTransform.rotate.z);
-
-	//ImGui::Separator();
-	//ImGui::DragFloat3("model Pos", &transform.translate.x, 0.1f);
-	//ImGui::Text("Model Rotation");
-	//ImGui::SliderAngle("Rot X", &transform.rotate.x, -180.0f, 180.0f);
-	//ImGui::SliderAngle("Rot Y", &transform.rotate.y, -180.0f, 180.0f);
-	//ImGui::SliderAngle("Rot Z", &transform.rotate.z, -180.0f, 180.0f);
-
-	//// ImGuiの内部コマンドを生成する
-	//ImGui::Render();
+	ImGui::Begin("Lighting");
+	ImGui::DragFloat("intencity", &directionalLightData->intensity);
+	ImGui::DragFloat4("color", &directionalLightData->color.x);
+	ImGui::End();
+	
 #endif // USE_IMGUI
 }
 

@@ -23,5 +23,7 @@ public:
 
 	
 private:
+	// ImGuiマネージャーのポインタ
+	std::unique_ptr <ImguiManager> imguiManager;
 };
 

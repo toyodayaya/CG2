@@ -19,10 +19,7 @@ void Framework::Initialize()
 	srvManager = std::make_unique <SrvManager>();
 	srvManager->Initialize(dxBasis.get());
 
-	// Imguiマネージャーの初期化
-	imguiManager = std::make_unique <ImguiManager>();
-	imguiManager->Initialize(winAPIManager.get(), dxBasis.get(), srvManager.get());
-
+	
 	// カメラの初期化
 	camera = new Camera();
 
@@ -72,26 +69,13 @@ void Framework::Update()
 		OutputDebugStringA("Hit 0\n");
 	}
 
-#ifdef USE_IMGUI
-
-	// 開発用UIの処理
-	imguiManager->Begin();
-
-#endif // USE_IMGUI
-
-
 	// カメラの更新
 	camera->Update();
 
 	// パーティクルマネージャーの更新
 	ParticleManager::GetInstance()->Update();
 
-#ifdef USE_IMGUI
 
-	// ImGuiの受け付け終了
-	imguiManager->End();
-
-#endif // USE_IMGUI
 }
 
 void Framework::Finalize()
@@ -115,9 +99,7 @@ void Framework::Finalize()
 	TextureManager::GetInstance()->Finalize();
 	// カメラの終了
 	delete camera;
-	// ImGuiマネージャーの終了
-	imguiManager->Finalize();
-
+	
 	// WinAPIの終了処理
 	winAPIManager->Finalize();
 

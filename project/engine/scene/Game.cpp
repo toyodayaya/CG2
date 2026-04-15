@@ -10,6 +10,10 @@ void Game::Initialize()
 	camera->SetRotate({ std::numbers::pi_v<float> / 3.0f,std::numbers::pi_v<float> ,0.0f });
 	camera->SetTranslate({ 0.0f,23.0f,10.0f });
 
+	// Imguiマネージャーの初期化
+	imguiManager = std::make_unique <ImguiManager>();
+	imguiManager->Initialize(winAPIManager.get(), dxBasis.get(), srvManager.get());
+
 	// シーンファクトリーの生成とセット
 	SceneFactory* sceneFactory = new SceneFactory;
 	SceneManager::GetInstance()->SetSceneFactory(sceneFactory);
@@ -19,6 +23,12 @@ void Game::Initialize()
 
 void Game::Update()
 {
+#ifdef USE_IMGUI
+
+	// 開発用UIの処理
+	imguiManager->Begin();
+
+#endif // USE_IMGUI
 
 	// 汎用部の更新処理
 	Framework::Update();
@@ -26,6 +36,12 @@ void Game::Update()
 	// シーンの更新
 	SceneManager::GetInstance()->Update();
 
+#ifdef USE_IMGUI
+
+	// ImGuiの受け付け終了
+	imguiManager->End();
+
+#endif // USE_IMGUI
 }
 
 void Game::Draw()
@@ -69,5 +85,8 @@ void Game::Finalize()
 	// 汎用部の終了処理
 	Framework::Finalize();
 	
+	// ImGuiマネージャーの終了
+	imguiManager->Finalize();
+
 }
 

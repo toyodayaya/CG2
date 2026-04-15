@@ -25,6 +25,8 @@ struct DirectionalLight
 	float intensity;
 };
 
+
+
 class Object3d
 {
 public:

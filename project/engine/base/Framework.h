@@ -66,8 +66,6 @@ protected:
 	std::unique_ptr <DirectXBasis> dxBasis;
 	// SRVマネージャーのポインタ
 	std::unique_ptr <SrvManager> srvManager;
-	// ImGuiマネージャーのポインタ
-	std::unique_ptr <ImguiManager> imguiManager;
 	// カメラのポインタ
 	Camera* camera = nullptr;
 	
