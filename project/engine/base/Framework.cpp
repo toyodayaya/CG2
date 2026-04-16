@@ -28,7 +28,7 @@ void Framework::Initialize()
 
 	// スプライト共通部の初期化
 	SpriteCommon::GetInstance()->Initialize(dxBasis.get());
-
+	SpriteCommon::GetInstance()->SetDefaultCamera(camera);
 	// 3dオブジェクト共通部の初期化
 	Object3dCommon::GetInstance()->Initialize(dxBasis.get());
 	Object3dCommon::GetInstance()->SetDefaultCamera(camera);

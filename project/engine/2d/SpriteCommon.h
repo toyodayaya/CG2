@@ -1,5 +1,6 @@
 #pragma once
 #include "DirectXBasis.h"
+#include "Camera.h"
 
 class SpriteCommon
 {
@@ -45,6 +46,9 @@ public:
 	void BlendModeSetting();
 	// getter
 	DirectXBasis* GetDxBasis() const { return dxBasis_; }
+	Camera* GetDefaultCamera() const { return defaultCamera_; }
+	// setter
+	void SetDefaultCamera(Camera* camera) { this->defaultCamera_ = camera; }
 
 	// インスタンス
 	static SpriteCommon* GetInstance();
@@ -61,6 +65,8 @@ private:
 	// BlendStateの設定
 	D3D12_BLEND_DESC blendDesc{};
 	// ブレンドモード
-	BlendMode blendMode_ = kBlendModeScreen;
+	BlendMode blendMode_ = kBlendModeNormal;
+	// デフォルトカメラ
+	Camera* defaultCamera_ = nullptr;
 };
 

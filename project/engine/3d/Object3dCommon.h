@@ -34,6 +34,7 @@ private:
 		kCountOfBlendMode
 	};
 
+
 public:
 	// 初期化
 	void Initialize(DirectXBasis* directXBasis);
@@ -81,6 +82,6 @@ private:
 
 	// デフォルトカメラ
 	Camera* defaultCamera_ = nullptr;
-
+	
 };
 

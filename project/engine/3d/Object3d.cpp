@@ -22,6 +22,9 @@ void Object3d::Initialize(Object3dCommon* object3dManager)
 	// 平行光源データ作成
 	CreateDirectionalLight();
 
+	// カメラデータ作成
+	CreateCameraResource();
+
 	// Transform変数を作る
 	cameraTransform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
 	transform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
@@ -38,6 +41,7 @@ void Object3d::CreateTransformMatrixData3d()
 	// 単位行列を書き込んでおく
 	transformationData->World = MakeIdentity4x4();
 	transformationData->WVP = MakeIdentity4x4();
+	transformationData->WorldInverseTranspose = Inverse(transformationData->World);
 }
 
 void Object3d::CreateDirectionalLight()
@@ -55,6 +59,16 @@ void Object3d::CreateDirectionalLight()
 	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
 	directionalLightData->intensity = 1.0f;
+
+}
+
+void Object3d::CreateCameraResource()
+{
+	// カメラリソースの生成
+	cameraResource = dxBasis_->CreateBufferResources(sizeof(CameraForGPU));
+	cameraResource->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
+
+	cameraData_->worldPosition = camera->GetTranslate();
 
 }
 
@@ -92,6 +106,8 @@ void Object3d::Draw()
 	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationResource->GetGPUVirtualAddress());
 	// 平行光源用のCBufferの場所を設定
 	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+	// カメラリソース用のCBufferの場所を設定
+	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
 
 	// 3Dモデルが割り当てられていれば描画する
 	if (model)

@@ -187,6 +187,8 @@ void Model::CreateMaterialData3d()
 	materialData->enableLighting = false;
 	// UVTransform行列を単位行列で初期化
 	materialData->uvTransform = MakeIdentity4x4();
+	// 光沢度
+	materialData->shininess = 1.0f;
 }
 
 void Model::Draw()

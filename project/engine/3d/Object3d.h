@@ -14,6 +14,7 @@ struct TransformationMatrix
 {
 	Matrix4x4 WVP;
 	Matrix4x4 World;
+	Matrix4x4 WorldInverseTranspose;
 };
 
 
@@ -25,7 +26,10 @@ struct DirectionalLight
 	float intensity;
 };
 
-
+struct CameraForGPU
+{
+	Vector3 worldPosition;
+};
 
 class Object3d
 {
@@ -41,6 +45,8 @@ public:
 	void CreateTransformMatrixData3d();
 	// 平行光源データ作成
 	void CreateDirectionalLight();
+	// カメラデータの作成
+	void CreateCameraResource();
 
 	// setter
 	void SetModel(const std::string& filePath);
@@ -71,6 +77,9 @@ private:
 	// データを書き込む
 	DirectionalLight* directionalLightData = nullptr;
 
+	// カメラデータ
+	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource;
+	CameraForGPU* cameraData_ = nullptr;
 
 	Transform cameraTransform;
 	Transform transform;

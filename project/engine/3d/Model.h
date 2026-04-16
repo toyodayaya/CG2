@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "ModelCommon.h"
 #include "MathManager.h"
 #include <wrl.h>
@@ -21,6 +21,8 @@ private:
 		int32_t enableLighting;
 		float padding[3];
 		Matrix4x4 uvTransform;
+		float shininess;
+		float paddings[3];
 	};
 
 	struct MaterialData

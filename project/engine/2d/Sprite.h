@@ -3,6 +3,7 @@
 #include <wrl.h>
 #include <d3d12.h>
 #include <string>
+#include "Camera.h"
 
 class SpriteCommon;
 class DirectXBasis;
@@ -24,14 +25,21 @@ private:
 		int32_t enableLighting;
 		float padding[3];
 		Matrix4x4 uvTransform;
+		float shininess;
+		float paddings[3];
 	};
 
 	struct TransformationMatrix
 	{
 		Matrix4x4 WVP;
 		Matrix4x4 World;
+		Matrix4x4 WorldInverseTranspose;
 	};
 
+	struct CameraForGPU
+	{
+		Vector3 worldPosition;
+	};
 
 public:
 	// 初期化
@@ -45,6 +53,9 @@ public:
 
 	// 座標変換行列データ作成
 	void CreateTransformMatrixData();
+
+	// カメラデータの作成
+	void CreateCameraResource();
 
 	// 更新
 	void Update();
@@ -72,11 +83,12 @@ public:
 	void SetFlipY(bool isFlipY) { this->isFlipY_ = isFlipY; }
 	void SetTextureLeftTop(const Vector2& leftTop) { this->textureLeftTop = leftTop; }
 	void SetTextureSize(const Vector2& textureSize) { this->textureSize = textureSize; }
-
+	
 private:
 	// ポインタ
 	SpriteCommon* spriteManager_;
 	DirectXBasis* dxBasis_;
+	Camera* camera = nullptr;
 
 	// Index用の頂点リソース
 	Microsoft::WRL::ComPtr <ID3D12Resource> indexResource;
@@ -101,6 +113,10 @@ private:
 	Microsoft::WRL::ComPtr <ID3D12Resource> transformationResource;
 	// データを書き込む
 	TransformationMatrix* transformationData = nullptr;
+
+	// カメラデータ
+	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource;
+	CameraForGPU* cameraData_ = nullptr;
 
 	// 座標
 	Vector2 pos = { 0.0f,0.0f };

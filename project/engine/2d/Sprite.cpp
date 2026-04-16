@@ -11,6 +11,9 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 	dxBasis_ = spriteCommon->GetDxBasis();
 	filePath = textureFilePath;
 
+	// デフォルトカメラをセット
+	this->camera = spriteManager_->GetDefaultCamera();
+
 	// 頂点データ作成
 	CreateVertexData();
 
@@ -19,6 +22,9 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 
 	// 座標変換行列データ作成
 	CreateTransformMatrixData();
+
+	// カメラデータ作成
+	CreateCameraResource();
 
 	// 単位行列を書き込んでおく
 	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
@@ -69,6 +75,8 @@ void Sprite::CreateMaterialData()
 	materialData->enableLighting = true;
 	// UVTransform行列を単位行列で初期化
 	materialData->uvTransform = MakeIdentity4x4();
+	// 光沢度
+	materialData->shininess = 100.0f;
 }
 
 void Sprite::CreateTransformMatrixData()
@@ -81,8 +89,20 @@ void Sprite::CreateTransformMatrixData()
 	// 単位行列を書き込んでおく
 	transformationData->World = MakeIdentity4x4();
 	transformationData->WVP = MakeIdentity4x4();
+	transformationData->WorldInverseTranspose = Inverse(transformationData->World);
 
 }
+
+void Sprite::CreateCameraResource()
+{
+	// カメラリソースの生成
+	cameraResource = dxBasis_->CreateBufferResources(sizeof(CameraForGPU));
+	cameraResource->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
+
+	cameraData_->worldPosition = camera->GetTranslate();
+
+}
+
 
 void Sprite::Update()
 {
@@ -158,7 +178,7 @@ void Sprite::Update()
 	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 	transformationData->WVP = worldViewProjectionMatrix;
 	transformationData->World = worldMatrix;
-
+	transformationData->WorldInverseTranspose = Inverse(transformationData->World);
 	
 }
 
@@ -172,6 +192,8 @@ void Sprite::Draw()
 	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 	// wvp用のCBufferの場所を設定
 	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationResource->GetGPUVirtualAddress());
+	// カメラリソース用のCBufferの場所を設定
+	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定
 	dxBasis_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSRVHandleGPU(filePath));
 	
