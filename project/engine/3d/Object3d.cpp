@@ -22,6 +22,9 @@ void Object3d::Initialize(Object3dCommon* object3dManager)
 	// 平行光源データ作成
 	CreateDirectionalLight();
 
+	// 点光源データ作成
+	CreatePointLight();
+
 	// カメラデータ作成
 	CreateCameraResource();
 
@@ -41,16 +44,13 @@ void Object3d::CreateTransformMatrixData3d()
 	// 単位行列を書き込んでおく
 	transformationData->World = MakeIdentity4x4();
 	transformationData->WVP = MakeIdentity4x4();
-	transformationData->WorldInverseTranspose = Inverse(transformationData->World);
+	transformationData->WorldInverseTranspose = Transpose(Inverse(transformationData->World));
 }
 
 void Object3d::CreateDirectionalLight()
 {
-
-
 	// 平行光源用のリソースを作る
 	directionalLightResource = dxBasis_->CreateBufferResources(sizeof(DirectionalLight));
-
 
 	//書き込むためのアドレスを取得
 	directionalLightResource->Map(
@@ -58,8 +58,22 @@ void Object3d::CreateDirectionalLight()
 
 	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
-	directionalLightData->intensity = 1.0f;
+	directionalLightData->intensity = 0.1f;
 
+}
+
+void Object3d::CreatePointLight()
+{
+	// 点光源用のリソースを作る
+	pointLightResource = dxBasis_->CreateBufferResources(sizeof(PointLight));
+	// 書き込むためのアドレスを取得
+	pointLightResource->Map(
+		0, nullptr, reinterpret_cast<void**>(&pointLightData));
+	pointLightData->color = { 1.0f,1.0f,1.0f,1.0f };
+	pointLightData->position = { 0.0f,2.0f,0.0f };
+	pointLightData->intensity = 0.5f;
+	pointLightData->radius = 100.0f;
+	pointLightData->decay = 100.0f;
 }
 
 void Object3d::CreateCameraResource()
@@ -96,6 +110,20 @@ void Object3d::Update()
 
 	transformationData->WVP = worldViewProjectionMatrix;
 	transformationData->World = worldMatrix;
+	transformationData->WorldInverseTranspose = Transpose(Inverse(transformationData->World));
+	if (camera)
+	{
+		cameraData_->worldPosition = camera->GetTranslate();
+	}
+	
+#ifdef USE_IMGUI
+	ImGui::Begin("PointLight");
+	ImGui::DragFloat3("pos", &pointLightData->position.x);
+	ImGui::DragFloat("radius", &pointLightData->radius);
+	ImGui::DragFloat("decay", &pointLightData->decay);
+	ImGui::End();
+#endif // USE_IMGUI
+
 
 }
 
@@ -106,6 +134,8 @@ void Object3d::Draw()
 	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationResource->GetGPUVirtualAddress());
 	// 平行光源用のCBufferの場所を設定
 	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+	// 点光源用のCBufferの場所を設定
+	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(5, pointLightResource->GetGPUVirtualAddress());
 	// カメラリソース用のCBufferの場所を設定
 	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
 

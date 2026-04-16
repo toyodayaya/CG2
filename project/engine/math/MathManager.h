@@ -70,6 +70,9 @@ namespace MathManager
 	// 逆行列
 	Matrix4x4 Inverse(const Matrix4x4& m);
 
+	// 5.転置行列
+	Matrix4x4 Transpose(const Matrix4x4& m);
+
 	// Vector3の足し算
 	Vector3 Vector3Add(const Vector3& v1, const Vector3& v2);
 

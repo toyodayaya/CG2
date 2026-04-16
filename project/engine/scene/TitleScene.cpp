@@ -23,13 +23,14 @@ void TitleScene::Initialize()
 	ModelManager::GetInstance()->LoadModel("plane.obj");
 	ModelManager::GetInstance()->LoadModel("axis.obj");
 	ModelManager::GetInstance()->LoadModel("fence.obj");
+	ModelManager::GetInstance()->LoadModel("terrain.obj");
 
 	// 3Dオブジェクトの初期化
 	for (uint32_t i = 0; i < 1; ++i)
 	{
 		std::unique_ptr<Object3d> object3d = std::make_unique<Object3d>();
 		object3d->Initialize(Object3dCommon::GetInstance());
-		object3d->SetModel("fence.obj");
+		object3d->SetModel("terrain.obj");
 		Vector3 pos = object3d->GetTranslate();
 		pos.x += (1.0f * (i + 1));
 		object3d->SetTranslate(pos);
@@ -84,7 +85,7 @@ void TitleScene::Draw()
 	// Spriteの描画
 	for (const std::unique_ptr <Sprite>& sprite : sprites)
 	{
-		sprite->Draw();
+		//sprite->Draw();
 	}
 
 

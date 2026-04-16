@@ -184,11 +184,11 @@ void Model::CreateMaterialData3d()
 	// 白色に設定
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	// Lighting設定
-	materialData->enableLighting = false;
+	materialData->enableLighting = true;
 	// UVTransform行列を単位行列で初期化
 	materialData->uvTransform = MakeIdentity4x4();
 	// 光沢度
-	materialData->shininess = 1.0f;
+	materialData->shininess = 2.0f;
 }
 
 void Model::Draw()

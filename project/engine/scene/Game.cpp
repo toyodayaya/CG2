@@ -7,8 +7,8 @@ void Game::Initialize()
 	// 汎用部の初期化処理
 	Framework::Initialize();
 
-	camera->SetRotate({ std::numbers::pi_v<float> / 3.0f,std::numbers::pi_v<float> ,0.0f });
-	camera->SetTranslate({ 0.0f,23.0f,10.0f });
+	camera->SetRotate(Vector3{ 0.25f,0.0f,0.0f });
+	camera->SetTranslate({ 0.0f,3.0f,-12.0f });
 
 	// Imguiマネージャーの初期化
 	imguiManager = std::make_unique <ImguiManager>();

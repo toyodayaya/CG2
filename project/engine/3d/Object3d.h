@@ -26,6 +26,16 @@ struct DirectionalLight
 	float intensity;
 };
 
+struct PointLight
+{
+	Vector4 color;
+	Vector3 position;
+	float intensity;
+	float radius;
+	float decay;
+	float padding[2];
+};
+
 struct CameraForGPU
 {
 	Vector3 worldPosition;
@@ -45,6 +55,8 @@ public:
 	void CreateTransformMatrixData3d();
 	// 平行光源データ作成
 	void CreateDirectionalLight();
+	// 点光源データ作成
+	void CreatePointLight();
 	// カメラデータの作成
 	void CreateCameraResource();
 
@@ -76,6 +88,9 @@ private:
 	Microsoft::WRL::ComPtr <ID3D12Resource> directionalLightResource;
 	// データを書き込む
 	DirectionalLight* directionalLightData = nullptr;
+	// 点光源リソース
+	Microsoft::WRL::ComPtr <ID3D12Resource> pointLightResource;
+	PointLight* pointLightData = nullptr;
 
 	// カメラデータ
 	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource;
