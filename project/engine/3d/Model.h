@@ -3,6 +3,7 @@
 #include "MathManager.h"
 #include <wrl.h>
 #include <d3d12.h>
+#include <assimp/scene.h>
 
 
 class Model
@@ -31,11 +32,18 @@ private:
 		uint32_t textureIndex = 0;
 	};
 
+	struct Node
+	{
+		Matrix4x4 localMatrix;
+		std::string name;
+		std::vector<Node> children;
+	};
 
 	struct ModelData
 	{
 		std::vector<VertexData> vertices;
 		MaterialData material;
+		Node rootNode;
 	};
 
 public:
@@ -46,11 +54,15 @@ public:
 	// mtlファイルを読む関数
 	static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 	// Objファイルを読み込む関数
-	static ModelData LoadObjFile(const std::string& directoryPath, const std::string& fileName);
+	static ModelData LoadModelFile(const std::string& directoryPath, const std::string& fileName);
+	// Node変換関数
+	static Node ReadNode(aiNode* node);
 	// 頂点データを作成
 	void CreateVertexData3d();
 	// マテリアルデータを作成
 	void CreateMaterialData3d();
+	// getter
+	ModelData GetModelData() { return modelData; }
 
 private:
 

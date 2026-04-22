@@ -62,7 +62,7 @@ void Object3d::CreateDirectionalLight()
 
 	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
-	directionalLightData->intensity = 0.0f;
+	directionalLightData->intensity = 0.5f;
 
 }
 
@@ -75,7 +75,7 @@ void Object3d::CreatePointLight()
 		0, nullptr, reinterpret_cast<void**>(&pointLightData));
 	pointLightData->color = { 1.0f,1.0f,1.0f,1.0f };
 	pointLightData->position = { 0.0f,2.0f,0.0f };
-	pointLightData->intensity = 0.0f;
+	pointLightData->intensity = 0.5f;
 	pointLightData->radius = 100.0f;
 	pointLightData->decay = 100.0f;
 }
@@ -119,7 +119,7 @@ void Object3d::Update()
 	//transform.translate.y += 0.01f;
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 	Matrix4x4 worldViewProjectionMatrix;
-
+	
 	if (camera)
 	{
 		const Matrix4x4& viewProjectionMatrix = camera->GetViewProjectionMatrix();
@@ -130,8 +130,8 @@ void Object3d::Update()
 		worldViewProjectionMatrix = worldMatrix;
 	}
 
-	transformationData->WVP = worldViewProjectionMatrix;
-	transformationData->World = worldMatrix;
+	transformationData->WVP = Multiply(model->GetModelData().rootNode.localMatrix,worldViewProjectionMatrix);
+	transformationData->World = Multiply(model->GetModelData().rootNode.localMatrix,worldMatrix);
 	transformationData->WorldInverseTranspose = Transpose(Inverse(transformationData->World));
 	if (camera)
 	{
