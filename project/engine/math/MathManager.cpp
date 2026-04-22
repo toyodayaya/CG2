@@ -219,6 +219,32 @@ namespace MathManager
 		return ret;
 	}
 
+	float Length(const Vector3& v)
+	{
+		float ret;
+		ret = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+		return ret;
+	}
 
+	Vector3 Normalize(const Vector3& v)
+	{
+		Vector3 ret;
+		float length = Length(v);
+
+		if (length != 0)
+		{
+			ret.x = v.x / length;
+			ret.y = v.y / length;
+			ret.z = v.z / length;
+		}
+		else
+		{
+			ret.x = 0;
+			ret.y = 0;
+			ret.z = 0;
+		}
+
+		return ret;
+	}
 
 }

@@ -3,6 +3,7 @@
 #include "MathManager.h"
 #include "ModelManager.h"
 #include "ImGuiManager.h"
+#include <numbers>
 
 using namespace MathManager;
 
@@ -24,6 +25,9 @@ void Object3d::Initialize(Object3dCommon* object3dManager)
 
 	// 点光源データ作成
 	CreatePointLight();
+
+	// スポットライトデータ作成
+	CreateSpotLight();
 
 	// カメラデータ作成
 	CreateCameraResource();
@@ -58,7 +62,7 @@ void Object3d::CreateDirectionalLight()
 
 	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
-	directionalLightData->intensity = 0.1f;
+	directionalLightData->intensity = 0.0f;
 
 }
 
@@ -71,9 +75,27 @@ void Object3d::CreatePointLight()
 		0, nullptr, reinterpret_cast<void**>(&pointLightData));
 	pointLightData->color = { 1.0f,1.0f,1.0f,1.0f };
 	pointLightData->position = { 0.0f,2.0f,0.0f };
-	pointLightData->intensity = 0.5f;
+	pointLightData->intensity = 0.0f;
 	pointLightData->radius = 100.0f;
 	pointLightData->decay = 100.0f;
+}
+
+void Object3d::CreateSpotLight()
+{
+	// スポットライト用のリソースを作る
+	spotLightResource = dxBasis_->CreateBufferResources(sizeof(SpotLight));
+	// 書き込むためのアドレスを取得
+	spotLightResource->Map(
+		0, nullptr, reinterpret_cast<void**>(&spotLightData));
+	spotLightData->color = { 1.0f,1.0f,1.0f,1.0f };
+	spotLightData->position = { 2.0f,1.25f,0.0f };
+	spotLightData->distance = 7.0f;
+	spotLightData->direction =
+		Normalize({ -1.0f,-1.0f,0.0f });
+	spotLightData->intensity = 4.0f;
+	spotLightData->decay = 2.0f;
+	spotLightData->cosAngle = std::cos(std::numbers::pi_v<float> / 3.0f);
+	spotLightData->cosFalloffStart = std::cos(std::numbers::pi_v<float> / 3.0f);
 }
 
 void Object3d::CreateCameraResource()
@@ -117,10 +139,17 @@ void Object3d::Update()
 	}
 	
 #ifdef USE_IMGUI
-	ImGui::Begin("PointLight");
-	ImGui::DragFloat3("pos", &pointLightData->position.x);
-	ImGui::DragFloat("radius", &pointLightData->radius);
-	ImGui::DragFloat("decay", &pointLightData->decay);
+	ImGui::Begin("SpotLight");
+	ImGui::DragFloat3("pos", &spotLightData->position.x);
+	ImGui::SliderFloat("intensity", &spotLightData->intensity, 0.0f, 10.0f);
+	ImGui::SliderFloat("cosFalloffStart", &spotLightData->cosFalloffStart, 0.0f, 2.0f);
+	ImGui::SliderFloat("cosAngle", &spotLightData->cosAngle, -1.0f, 1.0f);
+	
+	if (spotLightData->cosFalloffStart < spotLightData->cosAngle)
+	{
+		spotLightData->cosAngle = spotLightData->cosFalloffStart;
+	}
+
 	ImGui::End();
 #endif // USE_IMGUI
 
@@ -136,6 +165,8 @@ void Object3d::Draw()
 	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 	// 点光源用のCBufferの場所を設定
 	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(5, pointLightResource->GetGPUVirtualAddress());
+	// スポットライト用のCBufferの場所を設定
+	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(6, spotLightResource->GetGPUVirtualAddress());
 	// カメラリソース用のCBufferの場所を設定
 	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
 

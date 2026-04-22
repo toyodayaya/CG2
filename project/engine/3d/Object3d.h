@@ -36,6 +36,19 @@ struct PointLight
 	float padding[2];
 };
 
+struct SpotLight
+{
+	Vector4 color;
+	Vector3 position;
+	float intensity;
+	Vector3 direction;
+	float distance;
+	float decay;
+	float cosAngle;
+	float cosFalloffStart;
+	float padding[2];
+};
+
 struct CameraForGPU
 {
 	Vector3 worldPosition;
@@ -57,6 +70,8 @@ public:
 	void CreateDirectionalLight();
 	// 点光源データ作成
 	void CreatePointLight();
+	// スポットライトデータ作成
+	void CreateSpotLight();
 	// カメラデータの作成
 	void CreateCameraResource();
 
@@ -91,6 +106,9 @@ private:
 	// 点光源リソース
 	Microsoft::WRL::ComPtr <ID3D12Resource> pointLightResource;
 	PointLight* pointLightData = nullptr;
+	// スポットライトリソース
+	Microsoft::WRL::ComPtr <ID3D12Resource> spotLightResource;
+	SpotLight* spotLightData = nullptr;
 
 	// カメラデータ
 	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource;

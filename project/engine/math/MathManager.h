@@ -76,4 +76,10 @@ namespace MathManager
 	// Vector3の足し算
 	Vector3 Vector3Add(const Vector3& v1, const Vector3& v2);
 
+	// 正規化の関数
+	Vector3 Normalize(const Vector3& v);
+
+	// ノルンの関数
+	float Length(const Vector3& v);
+
 }
