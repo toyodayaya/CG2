@@ -1,6 +1,7 @@
 #pragma once
 #include "Audio.h"
 #include "Sprite.h"
+#include "Skybox.h"
 #include "Object3d.h"
 #include <numbers>
 #include "BaseScene.h"
@@ -31,6 +32,9 @@ private:
 
 	// 3dオブジェクト
 	std::vector<std::unique_ptr<Object3d>> object3ds;
+
+	// skybox
+	std::unique_ptr<Skybox> skybox;
 
 };
 

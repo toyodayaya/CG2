@@ -30,6 +30,7 @@
 #include "TextureManager.h"
 #include "Object3dCommon.h"
 #include "ModelCommon.h"
+#include "SkyboxCommon.h"
 #include "ModelManager.h"
 #include "Camera.h"
 #include "SrvManager.h"

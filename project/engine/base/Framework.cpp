@@ -32,6 +32,9 @@ void Framework::Initialize()
 	// 3dオブジェクト共通部の初期化
 	Object3dCommon::GetInstance()->Initialize(dxBasis.get());
 	Object3dCommon::GetInstance()->SetDefaultCamera(camera);
+	// Skybox共通部の初期化
+	SkyboxCommon::GetInstance()->Initialize(dxBasis.get());
+	SkyboxCommon::GetInstance()->SetDefaultCamera(camera);
 
 	// 3Dモデルマネージャーの初期化
 	ModelManager::GetInstance()->Initialize(dxBasis.get());
@@ -91,6 +94,8 @@ void Framework::Finalize()
 	
 	// 3Dモデルマネージャーの終了
 	ModelManager::GetInstance()->Finalize();
+	// Skybox共通部の終了
+	SkyboxCommon::GetInstance()->Finalize();
 	// 3dオブジェクト共通部の終了
 	Object3dCommon::GetInstance()->Finalize();
 	// スプライト共通部の終了

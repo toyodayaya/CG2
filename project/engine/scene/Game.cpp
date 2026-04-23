@@ -51,6 +51,9 @@ void Game::Draw()
 	dxBasis->PreDraw();
 	srvManager->PreDraw();
 
+	// Skyboxの描画準備
+	SkyboxCommon::GetInstance()->DrawSettingCommon();
+
 	// 3dモデルの描画準備
 	Object3dCommon::GetInstance()->DrawSettingCommon();
 
