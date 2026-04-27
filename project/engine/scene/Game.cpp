@@ -8,7 +8,7 @@ void Game::Initialize()
 	Framework::Initialize();
 
 	camera->SetRotate(Vector3{ 0.25f,0.0f,0.0f });
-	camera->SetTranslate({ 0.0f,3.0f,-12.0f });
+	camera->SetTranslate({ 0.0f,0.0f,-12.0f });
 
 	// Imguiマネージャーの初期化
 	imguiManager = std::make_unique <ImguiManager>();
@@ -50,9 +50,6 @@ void Game::Draw()
 	// 描画前処理
 	dxBasis->PreDraw();
 	srvManager->PreDraw();
-
-	// Skyboxの描画準備
-	SkyboxCommon::GetInstance()->DrawSettingCommon();
 
 	// 3dモデルの描画準備
 	Object3dCommon::GetInstance()->DrawSettingCommon();

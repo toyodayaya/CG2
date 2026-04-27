@@ -13,6 +13,13 @@ class SkyboxCommon;
 class Skybox
 {
 private:
+
+	struct MaterialData
+	{
+		std::string textureFilePath;
+		uint32_t textureIndex = 0;
+	};
+
 	struct VertexDataSkybox
 	{
 		Vector4 position;
@@ -26,6 +33,12 @@ private:
 		Matrix4x4 uvTransform;
 		float shininess;
 		float paddings[3];
+	};
+
+	struct ModelData
+	{
+		std::vector<VertexDataSkybox> vertices;
+		MaterialData material;
 	};
 
 	struct TransformationMatrix
@@ -97,11 +110,15 @@ private:
 
 	// バッファリソース内のデータを指すポインタ
 	VertexDataSkybox* vertexDataSkybox = nullptr;
+
 	uint32_t* indexData = nullptr;
 
 	// バッファビュー
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
+
+	// モデルデータ
+	ModelData modelData;
 
 	// マテリアル用のリソースを作る
 	Microsoft::WRL::ComPtr <ID3D12Resource> materialResource;
