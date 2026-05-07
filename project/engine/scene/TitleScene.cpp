@@ -86,7 +86,7 @@ void TitleScene::Draw()
 	// 3dモデルの描画
 	for (const std::unique_ptr <Object3d>& object3d : object3ds)
 	{
-		//object3d->Draw();
+		object3d->Draw();
 	}
 
 

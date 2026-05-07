@@ -77,6 +77,8 @@ void Sprite::CreateMaterialData()
 	materialData->uvTransform = MakeIdentity4x4();
 	// 光沢度
 	materialData->shininess = 100.0f;
+	// 映り込み
+	materialData->environmentCoefficient = 1.0f;
 }
 
 void Sprite::CreateTransformMatrixData()

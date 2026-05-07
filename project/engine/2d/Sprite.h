@@ -27,6 +27,7 @@ private:
 		Matrix4x4 uvTransform;
 		float shininess;
 		float paddings[3];
+		float environmentCoefficient;
 	};
 
 	struct TransformationMatrix

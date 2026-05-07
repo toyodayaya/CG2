@@ -8,6 +8,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include "ImguiManager.h"
 
 using namespace MathManager;
 
@@ -197,6 +198,8 @@ void Model::CreateMaterialData3d()
 	materialData->uvTransform = MakeIdentity4x4();
 	// 光沢度
 	materialData->shininess = 2.0f;
+	// 映り込み
+	materialData->environmentCoefficient = 1.0f;
 }
 
 void Model::Draw()

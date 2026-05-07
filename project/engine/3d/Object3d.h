@@ -17,8 +17,6 @@ struct TransformationMatrix
 	Matrix4x4 WorldInverseTranspose;
 };
 
-
-
 struct DirectionalLight
 {
 	Vector4 color;
