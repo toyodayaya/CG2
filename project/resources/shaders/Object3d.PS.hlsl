@@ -7,6 +7,7 @@ struct Material
     float32_t4x4 uvTransform;
     float32_t shininess;
     float32_t environmentCoefficient;
+    int32_t useEnvironment;
 };
 
 struct DirectionalLight
@@ -111,11 +112,14 @@ PixelShaderOutput main(VertexShaderOutput input)
         output.color.rgb = diffuseDirectionalLight + specularDirectionalLight + diffusePointLight + specularPointLight + diffuseSpotLight + specularSpotLight;
         output.color.a = gMaterial.color.a * textureColor.a;
         
-        float32_t3 cameraToPosition = normalize(input.worldPosition - gCamera.worldPosition);
-        float32_t3 reflectedVector = reflect(cameraToPosition, normalize(input.normal));
-        float32_t4 environmentColor = gEnvironmentTexture.Sample(gSampler, reflectedVector);
+        if(gMaterial.useEnvironment != 0)
+        {
+            float32_t3 cameraToPosition = normalize(input.worldPosition - gCamera.worldPosition);
+            float32_t3 reflectedVector = reflect(cameraToPosition, normalize(input.normal));
+            float32_t4 environmentColor = gEnvironmentTexture.Sample(gSampler, reflectedVector);
         
-        output.color.rgb += (environmentColor.rgb * gMaterial.environmentCoefficient);
+            output.color.rgb += (environmentColor.rgb * gMaterial.environmentCoefficient);
+        }
 
     }
     else

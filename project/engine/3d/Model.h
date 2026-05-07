@@ -24,6 +24,7 @@ private:
 		Matrix4x4 uvTransform;
 		float shininess;
 		float environmentCoefficient;
+		int32_t useEnvironmentMap;
 	};
 
 	struct MaterialData
