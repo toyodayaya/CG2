@@ -112,7 +112,7 @@ private:
 	Microsoft::WRL::ComPtr <IDxcBlob> pixelShaderBlob;
 	// DepthStencilStateの設定
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
-	
+
 
 	// 頂点リソース
 	Microsoft::WRL::ComPtr <ID3D12Resource> vertexResource;
@@ -128,7 +128,7 @@ private:
 	// SRV
 	D3D12_SHADER_RESOURCE_VIEW_DESC instancingSrvDesc{};
 
-	
+
 	const float kDeltaTime = 1.0f / 60.0f;
 
 	// 効果範囲
@@ -143,14 +143,14 @@ private:
 
 	// ビルボードのフラグ
 	bool isBillboard = true;
-	
+
 public:
 	// シングルトンインスタンスの取得
 	static ParticleManager* GetInstance();
 	// 終了
 	void Finalize();
 	// 初期化
-	void Initialize(DirectXBasis* dxBasis, SrvManager* srvManager,Camera* camera);
+	void Initialize(DirectXBasis* dxBasis, SrvManager* srvManager, Camera* camera);
 	// 更新
 	void Update();
 	// 描画
@@ -165,13 +165,15 @@ public:
 
 	// パーティクルの作成
 	// Particle生成関数
-	Particle MakeNewParticle(const Vector3& translate);
+	Particle MakeNewParticle(const Vector3& translate, const Vector3& scale, const Vector3& rotate,
+		const Vector3& velocity, const Vector4& color, const float lifeTime, const float currentTime);
 
 	// パーティクルグループの生成
 	void CreateParticleGroup(const std::string name, const std::string textureFilePath);
 
 	// パーティクルの発生
-	void Emit(const std::string name, const Vector3& position, uint32_t count);
+	void Emit(const std::string name, const Vector3& translate, const Vector3& scale, const Vector3& rotate,
+		const Vector3& velocity, const Vector4& color, const float lifeTime, const float currentTime, uint32_t count);
 
 	// 効果範囲の当たり判定
 	bool IsCollision(const AABB& aabb, const Vector3& point);
@@ -179,4 +181,3 @@ public:
 
 
 };
-

@@ -4,6 +4,7 @@
 #include "ModelManager.h"
 #include "ImGuiManager.h"
 #include <numbers>
+#include "TextureManager.h"
 
 using namespace MathManager;
 
@@ -169,6 +170,9 @@ void Object3d::Draw()
 	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(6, spotLightResource->GetGPUVirtualAddress());
 	// カメラリソース用のCBufferの場所を設定
 	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
+	// SRVのDescriptorTableの先頭を設定
+	dxBasis_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSRVHandleGPU(environmentMapTextureFilePath));
+
 
 	// 3Dモデルが割り当てられていれば描画する
 	if (model)

@@ -1,9 +1,14 @@
+
 #include "GamePlayScene.h"
 #include "TextureManager.h"
 #include "ModelManager.h"
 #include "Object3dCommon.h"
 #include "SpriteCommon.h"
 #include "ParticleManager.h"
+#include "MathManager.h"
+#include <random>
+
+using namespace MathManager;
 
 void GamePlayScene::Initialize()
 {
@@ -37,16 +42,27 @@ void GamePlayScene::Initialize()
 		object3ds.push_back(std::move(object3d));
 	}
 
-	
-	// パーティクルグループの作成
-	ParticleManager::GetInstance()->CreateParticleGroup("Particle", "resources/circle.png");
+	//// ランダムエンジンの初期化
+	//std::random_device seedGenerator;
+	//std::mt19937 randomEngine(seedGenerator());
 
-	// パーティクルエミッターの宣言
-	Transform translate;
-	translate.translate = { 0.0f,0.0f,0.0f };
-	translate.rotate = { 0.0f,0.0f,0.0f };
-	translate.scale = { 1.0f,1.0f,1.0f };
-	emitter = std::make_unique <ParticleEmitter>("Particle", translate.translate, 0.5f, 2);
+	//// パーティクルグループの作成
+	//ParticleManager::GetInstance()->CreateParticleGroup("Particle", "resources/circle.png");
+
+	//// パーティクルエミッターの宣言
+	//Transform transform;
+	//std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+	//randomTranslate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
+	//transform.translate = { 1.0f,1.0f,1.0f };
+	//transform.rotate = { 0.0f,0.0f,0.0f };
+	//transform.scale = { 1.0f,1.0f,1.0f };
+	//transform.translate = Vector3Add(transform.translate, randomTranslate);
+	//Vector3 velocity = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
+	//Vector4 color = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) ,1.0f };
+	//std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
+	//float lifeTime = distTime(randomEngine);
+	//float currentTime = 0;
+	//emitter = std::make_unique <ParticleEmitter>("Particle", transform,velocity,color,lifeTime,currentTime,0.5f,2);
 
 	// 音声再生
 	Audio::GetInstance()->SoundPlayWave(Audio::GetInstance()->GetXAudio2().Get(), soundData1);
@@ -74,12 +90,12 @@ void GamePlayScene::Update()
 	}
 
 	// パーティクルの更新処理
-	emitter->Update();
+	//emitter->Update();
 }
 
 void GamePlayScene::Draw()
 {
-	
+
 	// 3dモデルの描画
 	for (const std::unique_ptr <Object3d>& object3d : object3ds)
 	{
@@ -95,5 +111,5 @@ void GamePlayScene::Draw()
 	}
 
 	// パーティクルの描画
-	ParticleManager::GetInstance()->Draw();
+	//ParticleManager::GetInstance()->Draw();
 }

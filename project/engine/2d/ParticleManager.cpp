@@ -236,18 +236,16 @@ void ParticleManager::CreateVertexData()
 
 }
 
-ParticleManager::Particle ParticleManager::MakeNewParticle(const Vector3& translate)
+ParticleManager::Particle ParticleManager::MakeNewParticle(const Vector3& translate, const Vector3& scale, const Vector3& rotate,
+	const Vector3& velocity, const Vector4& color, const float lifeTime, const float currentTime)
 {
-	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
-	particle.transform.scale = { 1.0f,1.0f,1.0f };
-	particle.transform.rotate = { 0.0f,0.0f,0.0f };
-	randomTranslate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
-	particle.transform.translate = Vector3Add(translate, randomTranslate);
-	particle.velocity = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
-	particle.color = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) ,1.0f };
-	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
-	particle.lifeTime = distTime(randomEngine);
-	particle.currentTime = 0;
+	particle.transform.scale = scale;
+	particle.transform.rotate = rotate;
+	particle.transform.translate = translate;
+	particle.velocity = velocity;
+	particle.color = color;
+	particle.lifeTime = lifeTime;
+	particle.currentTime = currentTime;
 	return particle;
 }
 
@@ -377,7 +375,7 @@ void ParticleManager::Update()
 			}
 
 			Matrix4x4 viewProjectionMatrix = camera->GetViewProjectionMatrix();
-			Matrix4x4 wvp = Multiply(worldMatrix,viewProjectionMatrix);
+			Matrix4x4 wvp = Multiply(worldMatrix, viewProjectionMatrix);
 
 			// インスタンシング用データ1個分を書き込み
 			if (group.instanceCount < kMaxInstanceCount) {
@@ -394,7 +392,7 @@ void ParticleManager::Update()
 
 			ImGui::Begin("Particle Manager");
 			ImGui::DragFloat3("Position", &it->transform.translate.x, 0.1f);
-			
+
 			ImGui::End();
 
 #endif
@@ -418,7 +416,7 @@ void ParticleManager::Draw()
 	// VBVを設定
 	dxBasis_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
 
-	
+
 	// グループごとに描画
 	for (auto& [name, group] : particleGroups)
 	{
@@ -437,7 +435,8 @@ void ParticleManager::Draw()
 	}
 }
 
-void ParticleManager::Emit(const std::string name, const Vector3& position, uint32_t count)
+void ParticleManager::Emit(const std::string name, const Vector3& translate, const Vector3& scale, const Vector3& rotate,
+	const Vector3& velocity, const Vector4& color, const float lifeTime, const float currentTime, uint32_t count)
 {
 	// 登録済みかチェック
 	auto it = particleGroups.find(name);
@@ -449,6 +448,6 @@ void ParticleManager::Emit(const std::string name, const Vector3& position, uint
 		if (group.particles.size() >= kMaxInstanceCount) {
 			break; // 上限以上は積まない
 		}
-		group.particles.push_back(MakeNewParticle(position));
+		group.particles.push_back(MakeNewParticle(translate, scale, rotate, velocity, color, lifeTime, currentTime));
 	}
 }

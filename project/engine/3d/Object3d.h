@@ -79,6 +79,7 @@ public:
 	void SetRotate(const Vector3& rotate) { this->transform.rotate = rotate; }
 	void SetTranslate(const Vector3& translate) { this->transform.translate = translate; }
 	void SetCamera(Camera* camera) { this->camera = camera; }
+	void SetEnvironmentMapTextureFilePath(const std::string& filePath) { environmentMapTextureFilePath = filePath; }
 
 	// getter
 	const Vector3& GetScale() const { return transform.scale; }
@@ -114,5 +115,8 @@ private:
 
 	Transform cameraTransform;
 	Transform transform;
+
+	// 環境マップ用のテクスチャパス
+	std::string environmentMapTextureFilePath;
 };
 

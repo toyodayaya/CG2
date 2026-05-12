@@ -1,3 +1,4 @@
+
 #pragma once
 #include "Audio.h"
 #include "Sprite.h"
@@ -8,6 +9,8 @@
 #include "Input.h"
 #include "SceneManager.h"
 #include <memory>
+#include "ParticleEmitter.h"
+
 
 class TitleScene : public BaseScene
 {
@@ -36,5 +39,7 @@ private:
 	// skybox
 	std::unique_ptr<Skybox> skybox;
 
-};
+	// パーティクルエミッターのポインタ
+	std::unique_ptr <ParticleEmitter> emitter;
 
+};

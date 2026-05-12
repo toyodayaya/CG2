@@ -1,3 +1,4 @@
+
 #include "TitleScene.h"
 #include "TextureManager.h"
 #include "ModelManager.h"
@@ -5,6 +6,7 @@
 #include "SpriteCommon.h"
 #include "SceneManager.h"
 #include "SkyboxCommon.h"
+#include "ParticleManager.h"
 
 void TitleScene::Initialize()
 {
@@ -13,6 +15,8 @@ void TitleScene::Initialize()
 
 	// スプライトの初期化
 	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
+	TextureManager::GetInstance()->LoadTexture("resources/circle2.png");
+
 	for (uint32_t i = 0; i < 5; ++i)
 	{
 		/*std::unique_ptr<Sprite> sprite = std::make_unique<Sprite>();
@@ -26,12 +30,16 @@ void TitleScene::Initialize()
 	ModelManager::GetInstance()->LoadModel("fence.obj");
 	ModelManager::GetInstance()->LoadModel("terrain.obj");
 
+	// テクスチャの読み込み
+	TextureManager::GetInstance()->LoadTexture("resources/rostock_laage_airport_4k.dds");
+
 	// 3Dオブジェクトの初期化
 	for (uint32_t i = 0; i < 1; ++i)
 	{
 		std::unique_ptr<Object3d> object3d = std::make_unique<Object3d>();
 		object3d->Initialize(Object3dCommon::GetInstance());
 		object3d->SetModel("terrain.obj");
+		object3d->SetEnvironmentMapTextureFilePath("resources/rostock_laage_airport_4k.dds");
 		Vector3 pos = object3d->GetTranslate();
 		pos.x += (1.0f * (i + 1));
 		object3d->SetTranslate(pos);
@@ -39,12 +47,25 @@ void TitleScene::Initialize()
 	}
 
 	// Skyboxの初期化
-	TextureManager::GetInstance()->LoadTexture("resources/rostock_laage_airport_4k.dds");
 	skybox = std::make_unique<Skybox>();
 	skybox->Initialize(SkyboxCommon::GetInstance(), "resources/rostock_laage_airport_4k.dds");
 
 	// 音声再生
 	Audio::GetInstance()->SoundPlayWave(Audio::GetInstance()->GetXAudio2().Get(), soundData1);
+
+	//// パーティクルグループの作成
+	//ParticleManager::GetInstance()->CreateParticleGroup("Effect", "resources/circle2.png");
+
+	//// パーティクルエミッターの宣言
+	//Transform transform;
+	//transform.translate = { 0.0f,0.0f,0.0f };
+	//transform.rotate = { 0.0f,0.0f,0.0f };
+	//transform.scale = { 0.05f,1.0f,1.0f };
+	//Vector3 velocity = { 0.0f,0.0f,0.0f };
+	//Vector4 color = { 1.0f,1.0f,1.0f,1.0f };
+	//float lifeTime = 1.0f;
+	//float currentTime = 0.0f;
+	//emitter = std::make_unique <ParticleEmitter>("Effect", transform, velocity, color, lifeTime, currentTime, 0.5f, 8);
 
 }
 
@@ -78,6 +99,9 @@ void TitleScene::Update()
 	// Skyboxの更新処理
 	skybox->Update();
 
+	// パーティクルの更新処理
+	//emitter->Update();
+
 }
 
 void TitleScene::Draw()
@@ -98,4 +122,7 @@ void TitleScene::Draw()
 
 	// Skyboxの描画
 	skybox->Draw();
+
+	// パーティクルの描画
+	//ParticleManager::GetInstance()->Draw();
 }
