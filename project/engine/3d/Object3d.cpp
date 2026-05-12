@@ -171,7 +171,7 @@ void Object3d::Draw()
 	// カメラリソース用のCBufferの場所を設定
 	dxBasis_->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定
-	dxBasis_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSRVHandleGPU(environmentMapTextureFilePath));
+	dxBasis_->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::GetInstance()->GetSRVHandleGPU(environmentMapTextureFilePath));
 
 
 	// 3Dモデルが割り当てられていれば描画する
