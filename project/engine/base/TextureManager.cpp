@@ -82,14 +82,15 @@ void TextureManager::LoadTexture(const std::string& filePath)
 		assert(SUCCEEDED(hr));
 	}
 	
-	// テクスチャデータを追加
-	//textureDatas.resize(textureDatas.size() + 1);
 	// 追加したテクスチャデータの参照を取得する
 	TextureData& textureData = textureDatas[filePath];
 
 	// 追加したテクスチャデータに書き込む
 	textureData.metaData = mipImages.GetMetadata();
 	textureData.resource = dxBasis_->CreateTextureResource(textureData.metaData);
+
+	const Vector4 kRenderTargetClearValue{ 1.0f,0.0f,0.0f,1.0f };
+	textureData.renderTextureResource = dxBasis_->CreateRenderTextureResource(textureData.metaData, kRenderTargetClearValue);
 
 	// テクスチャデータの要素数番号をSRVのインデックスとする
 	textureData.srvIndex = srvManager_->Allocate();
@@ -122,6 +123,21 @@ void TextureManager::LoadTexture(const std::string& filePath)
 	// テクスチャデータを転送する
 	// 転送用に生成した中間リソースをテクスチャデータ構造体に格納
 	textureData.intermediateResource = dxBasis_->UploadTextureData(textureData.resource.Get(), mipImages);
+
+	// テクスチャデータの要素数番号をSRVのインデックスとする
+	textureData.renderSrvIndex = srvManager_->Allocate();
+	textureData.renderSrvHandleCPU = srvManager_->GetCPUDescriptorHandle(textureData.renderSrvIndex);
+	textureData.renderSrvHandleGPU = srvManager_->GetGPUDescriptorHandle(textureData.renderSrvIndex);
+
+	// RenderTexture用の設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC renderTextureSrvDesc{};
+	renderTextureSrvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	renderTextureSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	renderTextureSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	renderTextureSrvDesc.Texture2D.MipLevels = 1;
+
+	// SRVの生成
+	dxBasis_->GetDevice()->CreateShaderResourceView(textureData.renderTextureResource.Get(), &renderTextureSrvDesc,textureData.renderSrvHandleCPU);
 
 }
 

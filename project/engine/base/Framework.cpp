@@ -19,12 +19,14 @@ void Framework::Initialize()
 	srvManager = std::make_unique <SrvManager>();
 	srvManager->Initialize(dxBasis.get());
 
-	
 	// カメラの初期化
 	camera = new Camera();
 
 	// テクスチャマネージャーの初期化
 	TextureManager::GetInstance()->Initialize(dxBasis.get(), srvManager.get());
+
+	// RenderTextureの初期化
+	RenderTexture::GetInstance()->Initialize(dxBasis.get(),srvManager.get());
 
 	// スプライト共通部の初期化
 	SpriteCommon::GetInstance()->Initialize(dxBasis.get());
@@ -100,6 +102,8 @@ void Framework::Finalize()
 	Object3dCommon::GetInstance()->Finalize();
 	// スプライト共通部の終了
 	SpriteCommon::GetInstance()->Finalize();
+	// RenderTextureの終了
+	RenderTexture::GetInstance()->Finalize();
 	// テクスチャマネージャーの終了
 	TextureManager::GetInstance()->Finalize();
 	// カメラの終了

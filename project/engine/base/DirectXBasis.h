@@ -9,6 +9,7 @@
 #include <dxcapi.h>
 #pragma comment(lib, "dxcompiler.lib")
 #include <chrono>
+#include "MathManager.h"
 
 class DirectXBasis
 {
@@ -87,13 +88,18 @@ public:
 	// TextureResources関数
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metaData);
 
+	// RenderTexture生成関数
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTextureResource(const DirectX::TexMetadata& metaData, const Vector4& clearColor);
+
 	// UploadTextureData関数
 	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource> texture,
 		const DirectX::ScratchImage& mipImages);
 
+	// RenderTexture描画前処理
+	void RenderTexturePreDraw(ID3D12Resource* resource);
 	
 	// 描画前処理
-	void PreDraw();
+	void PreDraw(ID3D12Resource* resource);
 
 	// 描画後処理
 	void PostDraw();
@@ -105,7 +111,6 @@ public:
 
 	// スワップチェーンリソースの数を取得
 	size_t GetSwapChainResourceNum() const { return swapChainResources.size(); }
-
 	
 private:
 	HRESULT hr;
@@ -124,8 +129,10 @@ private:
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 	// スワップチェーンリソース
 	std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2> swapChainResources;
-	// RTVを二つ作るのでディスクリプタを二つ用意
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
+	// RenderTextureリソース
+	Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource = nullptr;
+	// RTVを3つ作るのでディスクリプタを二つ用意
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[3];
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
 	// ディスクリプタサイズ
 	uint32_t descriptorSizeRTV;
@@ -153,6 +160,8 @@ private:
 	IDxcCompiler3* dxcCompiler;
 	// WindowsAPI
 	WinAPIManager* winApiManager_ = nullptr;
+	// ClearValue
+	D3D12_CLEAR_VALUE clearValue;
 
 	
 };

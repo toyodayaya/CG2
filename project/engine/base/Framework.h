@@ -36,6 +36,7 @@
 #include "SrvManager.h"
 #include "ParticleManager.h"
 #include "Audio.h"
+#include "RenderTexture.h"
 
 
 class Framework

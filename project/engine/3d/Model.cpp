@@ -200,7 +200,7 @@ void Model::CreateMaterialData3d()
 	materialData->shininess = 2.0f;
 	// 映り込み
 	materialData->environmentCoefficient = 1.0f;
-	materialData->useEnvironmentMap = true;
+	materialData->useEnvironmentMap = false;
 }
 
 void Model::Draw()

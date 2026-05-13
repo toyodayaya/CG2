@@ -31,7 +31,7 @@ void TitleScene::Initialize()
 	ModelManager::GetInstance()->LoadModel("terrain.obj");
 
 	// テクスチャの読み込み
-	TextureManager::GetInstance()->LoadTexture("resources/rostock_laage_airport_4k.dds");
+	//TextureManager::GetInstance()->LoadTexture("resources/rostock_laage_airport_4k.dds");
 
 	// 3Dオブジェクトの初期化
 	for (uint32_t i = 0; i < 1; ++i)
@@ -39,7 +39,7 @@ void TitleScene::Initialize()
 		std::unique_ptr<Object3d> object3d = std::make_unique<Object3d>();
 		object3d->Initialize(Object3dCommon::GetInstance());
 		object3d->SetModel("terrain.obj");
-		object3d->SetEnvironmentMapTextureFilePath("resources/rostock_laage_airport_4k.dds");
+		object3d->SetEnvironmentMapTextureFilePath("resources/uvChecker.png");
 		Vector3 pos = object3d->GetTranslate();
 		pos.x += (1.0f * (i + 1));
 		object3d->SetTranslate(pos);
@@ -47,8 +47,8 @@ void TitleScene::Initialize()
 	}
 
 	// Skyboxの初期化
-	skybox = std::make_unique<Skybox>();
-	skybox->Initialize(SkyboxCommon::GetInstance(), "resources/rostock_laage_airport_4k.dds");
+	/*skybox = std::make_unique<Skybox>();
+	skybox->Initialize(SkyboxCommon::GetInstance(), "resources/rostock_laage_airport_4k.dds");*/
 
 	// 音声再生
 	Audio::GetInstance()->SoundPlayWave(Audio::GetInstance()->GetXAudio2().Get(), soundData1);
@@ -97,7 +97,7 @@ void TitleScene::Update()
 	}
 
 	// Skyboxの更新処理
-	skybox->Update();
+	//skybox->Update();
 
 	// パーティクルの更新処理
 	//emitter->Update();
@@ -121,7 +121,7 @@ void TitleScene::Draw()
 	}
 
 	// Skyboxの描画
-	skybox->Draw();
+	//skybox->Draw();
 
 	// パーティクルの描画
 	//ParticleManager::GetInstance()->Draw();
