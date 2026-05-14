@@ -5,6 +5,15 @@
 
 class ParticleEmitter
 {
+public:
+	enum Type
+	{
+		// 通常
+		kNormal,
+		// 斬撃
+		kHitEffect,
+	};
+
 private:
 
 	struct Emitter
@@ -17,13 +26,15 @@ private:
 		uint32_t count;
 		float frequency;
 		float frequencyTime;
+		Type type;
 	};
 
 public:
 	static ParticleEmitter* instance;
 
 	ParticleEmitter(const std::string name, const Transform& transform,
-		const Vector3& velocity, const Vector4& color, const float lifeTime, const float currentTime, float frequency, uint32_t count);
+		const Vector3& velocity, const Vector4& color, const float lifeTime, const float currentTime, 
+		float frequency, uint32_t count,Type type);
 	~ParticleEmitter() = default;
 	ParticleEmitter(ParticleEmitter&) = delete;
 	ParticleEmitter& operator=(ParticleEmitter&) = delete;

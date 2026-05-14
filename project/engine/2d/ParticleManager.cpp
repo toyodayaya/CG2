@@ -135,15 +135,7 @@ void ParticleManager::GenerateGraphicsPipeline()
 
 	// BlendStateの設定
 	// 全ての色要素を書き込む
-	blendDesc.RenderTarget[0].RenderTargetWriteMask =
-		D3D12_COLOR_WRITE_ENABLE_ALL;
-	blendDesc.RenderTarget[0].BlendEnable = TRUE;
-	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
-	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	BlendModeSetting();
 
 	// RasterizerStateの設定を行う
 	// 三角形の中を塗りつぶす
@@ -236,11 +228,90 @@ void ParticleManager::CreateVertexData()
 
 }
 
-ParticleManager::Particle ParticleManager::MakeNewParticle(const Vector3& translate, const Vector3& scale, const Vector3& rotate,
+void ParticleManager::BlendModeSetting()
+{
+	blendDesc.RenderTarget[0].RenderTargetWriteMask =
+		D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	// ブレンドモードを切り替える
+	switch (blendMode_)
+	{
+	case kBlendModeNormal:
+		blendDesc.RenderTarget[0].BlendEnable = TRUE;
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+
+		break;
+
+	case kBlendModeAdd:
+		blendDesc.RenderTarget[0].BlendEnable = TRUE;
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+
+		break;
+
+	case kBlendModeSubstract:
+		blendDesc.RenderTarget[0].BlendEnable = TRUE;
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_REV_SUBTRACT;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+
+		break;
+
+	case kBlendModeMultiply:
+		blendDesc.RenderTarget[0].BlendEnable = TRUE;
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_ZERO;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_SRC_COLOR;
+
+		break;
+
+	case kBlendModeScreen:
+		blendDesc.RenderTarget[0].BlendEnable = TRUE;
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_INV_DEST_COLOR;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+
+		break;
+	}
+
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+}
+
+ParticleManager::Particle ParticleManager::MakeNewNormalParticle(const Vector3& translate, const Vector3& scale, const Vector3& rotate,
 	const Vector3& velocity, const Vector4& color, const float lifeTime, const float currentTime)
 {
+	// ランダムエンジンの初期化
+	std::random_device seedGenerator;
+	std::mt19937 randomEngine(seedGenerator());
+	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+	randomTranslate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
+	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
+
 	particle.transform.scale = scale;
 	particle.transform.rotate = rotate;
+	particle.transform.translate = translate;
+	particle.velocity = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
+	particle.color = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) ,1.0f };
+	particle.lifeTime = distTime(randomEngine);
+	particle.currentTime = currentTime;
+	return particle;
+}
+
+ParticleManager::Particle ParticleManager::MakeNewHitEffectParticle(const Vector3& translate, const Vector3& scale, const Vector3& rotate, const Vector3& velocity, const Vector4& color, const float lifeTime, const float currentTime)
+{
+	// ランダムエンジンの初期化
+	std::random_device seedGenerator;
+	std::mt19937 randomEngine(seedGenerator());
+	std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);
+	std::uniform_real_distribution<float> distScale(0.4f, 1.5f);
+
+	particle.transform.scale = { scale.x,distScale(randomEngine),scale.z };;
+	particle.transform.rotate = { rotate.x,rotate.y,distRotate(randomEngine) };
 	particle.transform.translate = translate;
 	particle.velocity = velocity;
 	particle.color = color;
@@ -379,11 +450,10 @@ void ParticleManager::Update()
 
 			// インスタンシング用データ1個分を書き込み
 			if (group.instanceCount < kMaxInstanceCount) {
-				ParticleForGPU& out = group.instancingData[group.instanceCount];
-				out.World = worldMatrix;
-				out.WVP = wvp;
-				out.Color = it->color;
-				out.Color.w = alpha;
+				group.instancingData[group.instanceCount].World = worldMatrix;
+				group.instancingData[group.instanceCount].WVP = wvp;
+				group.instancingData[group.instanceCount].Color = it->color;
+				group.instancingData[group.instanceCount].Color.w = alpha;
 
 				group.instanceCount++;
 			}
@@ -436,7 +506,7 @@ void ParticleManager::Draw()
 }
 
 void ParticleManager::Emit(const std::string name, const Vector3& translate, const Vector3& scale, const Vector3& rotate,
-	const Vector3& velocity, const Vector4& color, const float lifeTime, const float currentTime, uint32_t count)
+	const Vector3& velocity, const Vector4& color, const float lifeTime, const float currentTime, uint32_t count,ParticleEmitter::Type type)
 {
 	// 登録済みかチェック
 	auto it = particleGroups.find(name);
@@ -448,6 +518,20 @@ void ParticleManager::Emit(const std::string name, const Vector3& translate, con
 		if (group.particles.size() >= kMaxInstanceCount) {
 			break; // 上限以上は積まない
 		}
-		group.particles.push_back(MakeNewParticle(translate, scale, rotate, velocity, color, lifeTime, currentTime));
+
+		switch (type)
+		{
+		case ParticleEmitter::Type::kNormal:
+			group.particles.push_back(MakeNewNormalParticle(translate, scale, rotate, velocity, color, lifeTime, currentTime));
+
+			break;
+
+		case ParticleEmitter::Type::kHitEffect:
+			group.particles.push_back(MakeNewHitEffectParticle(translate, scale, rotate, velocity, color, lifeTime, currentTime));
+
+
+			break;
+		}
+
 	}
 }

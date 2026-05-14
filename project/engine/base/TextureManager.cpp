@@ -89,7 +89,7 @@ void TextureManager::LoadTexture(const std::string& filePath)
 	textureData.metaData = mipImages.GetMetadata();
 	textureData.resource = dxBasis_->CreateTextureResource(textureData.metaData);
 
-	const Vector4 kRenderTargetClearValue{ 1.0f,0.0f,0.0f,1.0f };
+	const Vector4 kRenderTargetClearValue{ 0.1f,0.25f,0.5f,1.0f };
 	textureData.renderTextureResource = dxBasis_->CreateRenderTextureResource(textureData.metaData, kRenderTargetClearValue);
 
 	// テクスチャデータの要素数番号をSRVのインデックスとする

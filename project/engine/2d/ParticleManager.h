@@ -6,6 +6,7 @@
 #include "DirectXBasis.h"
 #include "SrvManager.h"
 #include "MathManager.h"
+#include "ParticleEmitter.h"
 #include <numbers>
 #include "Camera.h"
 #include <random>
@@ -76,6 +77,24 @@ private:
 		AABB area;
 	};
 
+	enum BlendMode
+	{
+		// ブレンドなし
+		kBlendModeNone,
+		// 通常ブレンド
+		kBlendModeNormal,
+		// 加算
+		kBlendModeAdd,
+		// 減算
+		kBlendModeSubstract,
+		// 乗算
+		kBlendModeMultiply,
+		// スクリーン
+		kBlendModeScreen,
+		// 利用禁止
+		kCountOfBlendMode
+	};
+
 private:
 	static ParticleManager* instance;
 
@@ -143,6 +162,8 @@ private:
 
 	// ビルボードのフラグ
 	bool isBillboard = true;
+	// ブレンドモード
+	BlendMode blendMode_ = kBlendModeAdd;
 
 public:
 	// シングルトンインスタンスの取得
@@ -162,10 +183,14 @@ public:
 	void GenerateGraphicsPipeline();
 	// 頂点データ作成
 	void CreateVertexData();
+	// ブレンドモード設定
+	void BlendModeSetting();
 
 	// パーティクルの作成
-	// Particle生成関数
-	Particle MakeNewParticle(const Vector3& translate, const Vector3& scale, const Vector3& rotate,
+	// NormalParticle生成関数
+	Particle MakeNewNormalParticle(const Vector3& translate, const Vector3& scale, const Vector3& rotate,
+		const Vector3& velocity, const Vector4& color, const float lifeTime, const float currentTime);
+	Particle MakeNewHitEffectParticle(const Vector3& translate, const Vector3& scale, const Vector3& rotate,
 		const Vector3& velocity, const Vector4& color, const float lifeTime, const float currentTime);
 
 	// パーティクルグループの生成
@@ -173,7 +198,7 @@ public:
 
 	// パーティクルの発生
 	void Emit(const std::string name, const Vector3& translate, const Vector3& scale, const Vector3& rotate,
-		const Vector3& velocity, const Vector4& color, const float lifeTime, const float currentTime, uint32_t count);
+		const Vector3& velocity, const Vector4& color, const float lifeTime, const float currentTime, uint32_t count,ParticleEmitter::Type type);
 
 	// 効果範囲の当たり判定
 	bool IsCollision(const AABB& aabb, const Vector3& point);

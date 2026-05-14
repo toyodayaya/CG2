@@ -10,6 +10,7 @@
 #include "SceneManager.h"
 #include <memory>
 #include "ParticleEmitter.h"
+#include <random>
 
 
 class TitleScene : public BaseScene

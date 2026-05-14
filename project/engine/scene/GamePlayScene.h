@@ -35,7 +35,5 @@ private:
 	// パーティクルエミッターのポインタ
 	std::unique_ptr <ParticleEmitter> emitter;
 	Vector3 randomTranslate;
-	// 乱数生成器
-	std::random_device seedGenerator;
-	std::mt19937 randomEngine;
+
 };

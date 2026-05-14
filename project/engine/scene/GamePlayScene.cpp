@@ -6,6 +6,7 @@
 #include "SpriteCommon.h"
 #include "ParticleManager.h"
 #include "MathManager.h"
+#include "ParticleEmitter.h"
 #include <random>
 
 using namespace MathManager;
@@ -30,39 +31,34 @@ void GamePlayScene::Initialize()
 	ModelManager::GetInstance()->LoadModel("axis.obj");
 	ModelManager::GetInstance()->LoadModel("fence.obj");
 
-	// 3Dオブジェクトの初期化
-	for (uint32_t i = 0; i < 1; ++i)
-	{
-		std::unique_ptr<Object3d> object3d = std::make_unique<Object3d>();
-		object3d->Initialize(Object3dCommon::GetInstance());
-		object3d->SetModel("fence.obj");
-		Vector3 pos = object3d->GetTranslate();
-		pos.x += (1.0f * (i + 1));
-		object3d->SetTranslate(pos);
-		object3ds.push_back(std::move(object3d));
-	}
+	//// 3Dオブジェクトの初期化
+	//for (uint32_t i = 0; i < 1; ++i)
+	//{
+	//	std::unique_ptr<Object3d> object3d = std::make_unique<Object3d>();
+	//	object3d->Initialize(Object3dCommon::GetInstance());
+	//	object3d->SetModel("fence.obj");
+	//	Vector3 pos = object3d->GetTranslate();
+	//	pos.x += (1.0f * (i + 1));
+	//	object3d->SetTranslate(pos);
+	//	object3ds.push_back(std::move(object3d));
+	//}
 
-	//// ランダムエンジンの初期化
-	//std::random_device seedGenerator;
-	//std::mt19937 randomEngine(seedGenerator());
+	
 
-	//// パーティクルグループの作成
-	//ParticleManager::GetInstance()->CreateParticleGroup("Particle", "resources/circle.png");
+	// パーティクルグループの作成
+	ParticleManager::GetInstance()->CreateParticleGroup("Particle", "resources/circle.png");
 
-	//// パーティクルエミッターの宣言
-	//Transform transform;
-	//std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
-	//randomTranslate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
-	//transform.translate = { 1.0f,1.0f,1.0f };
-	//transform.rotate = { 0.0f,0.0f,0.0f };
-	//transform.scale = { 1.0f,1.0f,1.0f };
-	//transform.translate = Vector3Add(transform.translate, randomTranslate);
-	//Vector3 velocity = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
-	//Vector4 color = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) ,1.0f };
-	//std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
-	//float lifeTime = distTime(randomEngine);
-	//float currentTime = 0;
-	//emitter = std::make_unique <ParticleEmitter>("Particle", transform,velocity,color,lifeTime,currentTime,0.5f,2);
+	// パーティクルエミッターの宣言
+	Transform transform;
+	transform.translate = { 1.0f,1.0f,1.0f };
+	transform.rotate = { 0.0f,0.0f,0.0f };
+	transform.scale = { 1.0f,1.0f,1.0f };
+	transform.translate = Vector3Add(transform.translate, randomTranslate);
+	Vector3 velocity = { 0.0f,0.0f,0.0f };
+	Vector4 color = { 0.0f,0.0f,0.0f,0.0f };
+	float lifeTime = 0.0f;
+	float currentTime = 0;
+	emitter = std::make_unique <ParticleEmitter>("Particle", transform,velocity,color,lifeTime,currentTime,0.5f,2,ParticleEmitter::Type::kNormal);
 
 	// 音声再生
 	Audio::GetInstance()->SoundPlayWave(Audio::GetInstance()->GetXAudio2().Get(), soundData1);
@@ -77,11 +73,11 @@ void GamePlayScene::Finalize()
 void GamePlayScene::Update()
 {
 	// 3Dモデルの更新処理
-	for (const std::unique_ptr<Object3d>& object3d : object3ds)
+	/*for (const std::unique_ptr<Object3d>& object3d : object3ds)
 	{
 		object3d->Update();
 
-	}
+	}*/
 
 	// スプライトの更新処理
 	for (const std::unique_ptr <Sprite>& sprite : sprites)
@@ -90,26 +86,26 @@ void GamePlayScene::Update()
 	}
 
 	// パーティクルの更新処理
-	//emitter->Update();
+	emitter->Update();
 }
 
 void GamePlayScene::Draw()
 {
 
 	// 3dモデルの描画
-	for (const std::unique_ptr <Object3d>& object3d : object3ds)
-	{
-		object3d->Draw();
+	//for (const std::unique_ptr <Object3d>& object3d : object3ds)
+	//{
+	//	//object3d->Draw();
 
-	}
+	//}
 
 
 	// Spriteの描画
 	for (const std::unique_ptr <Sprite>& sprite : sprites)
 	{
-		sprite->Draw();
+		//sprite->Draw();
 	}
 
 	// パーティクルの描画
-	//ParticleManager::GetInstance()->Draw();
+	ParticleManager::GetInstance()->Draw();
 }

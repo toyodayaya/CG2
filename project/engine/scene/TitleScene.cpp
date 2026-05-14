@@ -7,6 +7,8 @@
 #include "SceneManager.h"
 #include "SkyboxCommon.h"
 #include "ParticleManager.h"
+#include "ParticleEmitter.h"
+#include <random>
 
 void TitleScene::Initialize()
 {
@@ -53,19 +55,20 @@ void TitleScene::Initialize()
 	// 音声再生
 	Audio::GetInstance()->SoundPlayWave(Audio::GetInstance()->GetXAudio2().Get(), soundData1);
 
-	//// パーティクルグループの作成
-	//ParticleManager::GetInstance()->CreateParticleGroup("Effect", "resources/circle2.png");
+	
+	// パーティクルグループの作成
+	ParticleManager::GetInstance()->CreateParticleGroup("Effect", "resources/circle2.png");
 
-	//// パーティクルエミッターの宣言
-	//Transform transform;
-	//transform.translate = { 0.0f,0.0f,0.0f };
-	//transform.rotate = { 0.0f,0.0f,0.0f };
-	//transform.scale = { 0.05f,1.0f,1.0f };
-	//Vector3 velocity = { 0.0f,0.0f,0.0f };
-	//Vector4 color = { 1.0f,1.0f,1.0f,1.0f };
-	//float lifeTime = 1.0f;
-	//float currentTime = 0.0f;
-	//emitter = std::make_unique <ParticleEmitter>("Effect", transform, velocity, color, lifeTime, currentTime, 0.5f, 8);
+	// パーティクルエミッターの宣言
+	Transform transform;
+	transform.translate = { 0.0f,0.0f,0.0f };
+	transform.rotate = { 0.0f,0.0f,0.0f};
+	transform.scale = { 0.05f,1.0f,1.0f};
+	Vector3 velocity = { 0.0f,0.0f,0.0f };
+	Vector4 color = { 1.0f,1.0f,1.0f,1.0f };
+	float lifeTime = 5.0f;
+	float currentTime = 0.0f;
+	emitter = std::make_unique <ParticleEmitter>("Effect", transform, velocity, color, lifeTime, currentTime, 1.0f, 8,ParticleEmitter::Type::kHitEffect);
 
 }
 
@@ -100,7 +103,8 @@ void TitleScene::Update()
 	//skybox->Update();
 
 	// パーティクルの更新処理
-	//emitter->Update();
+	emitter->Update();
+	ParticleManager::GetInstance()->Update();
 
 }
 
@@ -110,7 +114,7 @@ void TitleScene::Draw()
 	// 3dモデルの描画
 	for (const std::unique_ptr <Object3d>& object3d : object3ds)
 	{
-		object3d->Draw();
+		//object3d->Draw();
 	}
 
 
@@ -124,5 +128,5 @@ void TitleScene::Draw()
 	//skybox->Draw();
 
 	// パーティクルの描画
-	//ParticleManager::GetInstance()->Draw();
+	ParticleManager::GetInstance()->Draw();
 }
